@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Riptide Studios | Lead CRM</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e0d0b'/%3E%3Cg fill='%2360a5fa'%3E%3Cellipse cx='16' cy='16' rx='9' ry='5' fill='none' stroke='%2360a5fa' stroke-width='1.5'/%3E%3Cpath d='M7 16 Q11 10 16 10 Q21 10 25 16' fill='none' stroke='%2360a5fa' stroke-width='1.5'/%3E%3Cpath d='M16 10 L13 6 M16 10 L19 6' stroke='%2360a5fa' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M25 16 L29 19 M25 16 L29 13' stroke='%2360a5fa' stroke-width='1.2' stroke-linecap='round'/%3E%3Ccircle cx='13' cy='15' r='1' fill='%2360a5fa'/%3E%3C/g%3E%3C/svg%3E">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LOADING SCREEN
+═══════════════════════════════════════════════════════════════ -->
+<div id="loadingScreen">
+  <div id="loadingInner">
+    <div id="loadingLogo">🌊</div>
+    <div id="loadingTitle">Riptide Studios</div>
+    <div id="loadingSubtitle">Lead CRM</div>
+    <div id="loadingSpinner"></div>
+    <div id="loadingMsg">Connecting to database…</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     BACKUP REMINDER BANNER
+═══════════════════════════════════════════════════════════════ -->
+<div id="backupBanner" style="display:none;">
+  <span>💾 Daily backup reminder — export your data now.</span>
+  <button id="backupExportBtn">Export CSV</button>
+  <button id="backupDismissBtn">Dismiss</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════════════════════ -->
+<header id="appHeader" style="display:none;">
+  <div class="logo">
+    <div class="logo-icon">🌊</div>
+    <div class="logo-text">Riptide Studios <span class="logo-divider">│</span> Lead CRM</div>
+  </div>
+  <div class="hdr-right">
+    <div class="api-pill" id="groqPill">
+      <div class="api-dot" id="groqDot"></div>
+      <span>Groq</span>
+    </div>
+    <div class="sync-pill" id="syncPill">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLabel">Supabase</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TAB BAR
+═══════════════════════════════════════════════════════════════ -->
+<div class="tabbar" id="appTabbar" style="display:none;">
+  <button class="tbtn active" data-tab="home" onclick="switchTab('home')">
+    🏠 Home
+    <span class="tab-badge" id="badge-home" style="display:none;"></span>
+  </button>
+  <button class="tbtn" data-tab="leads" onclick="switchTab('leads')">
+    🔍 Find Leads
+    <span class="tab-badge" id="badge-leads" style="display:none;"></span>
+  </button>
+  <button class="tbtn" data-tab="pipeline" onclick="switchTab('pipeline')">
+    📊 Pipeline
+    <span class="tab-badge" id="badge-pipeline" style="display:none;"></span>
+  </button>
+  <button class="tbtn" data-tab="clients" onclick="switchTab('clients')">
+    👥 Clients
+    <span class="tab-badge" id="badge-clients" style="display:none;"></span>
+  </button>
+  <button class="tbtn" data-tab="outreach" onclick="switchTab('outreach')">
+    📤 Outreach
+    <span class="tab-badge" id="badge-outreach" style="display:none;"></span>
+  </button>
+  <button class="tbtn" data-tab="settings" onclick="switchTab('settings')">
+    ⚙️ Settings
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════════════════════ -->
+<main id="appMain" style="display:none;">
+
+  <!-- ─── TAB 1: HOME ─────────────────────────────────────── -->
+  <div class="pane active" id="pane-home">
+    <div class="pane-header">
+      <h2 class="pane-title">Daily Focus</h2>
+      <p class="pane-desc">Your pipeline at a glance.</p>
+    </div>
+
+    <!-- Follow-ups due -->
+    <div class="card" id="homeFollowups">
+      <div class="ctitle">⏰ Follow-ups Due Today</div>
+      <div id="followupList" class="empty-state">No follow-ups due today.</div>
+    </div>
+
+    <!-- Stale leads -->
+    <div class="card" id="homeStale">
+      <div class="ctitle">🕰 Stale Leads <span class="ctitle-note">(7+ days inactive)</span></div>
+      <div id="staleList" class="empty-state">No stale leads.</div>
+    </div>
+
+    <!-- Pipeline snapshot -->
+    <div class="card">
+      <div class="ctitle">📊 Pipeline Snapshot</div>
+      <div id="pipelineSnapshot" class="snapshot-grid"></div>
+    </div>
+  </div>
+
+  <!-- ─── TAB 2: FIND LEADS ────────────────────────────────── -->
+  <div class="pane" id="pane-leads">
+    <div class="pane-header">
+      <h2 class="pane-title">Find Leads</h2>
+      <p class="pane-desc">AI-powered business discovery. Verify details before outreach — AI can hallucinate.</p>
+    </div>
+
+    <!-- Niche selector -->
+    <div class="card">
+      <div class="ctitle">Business Type</div>
+      <div class="niche-wrap">
+        <select id="nicheCat" onchange="populateSubniches()">
+          <option value="">— Select category —</option>
+        </select>
+        <div id="nicheChips" class="niche-chips"></div>
+      </div>
+    </div>
+
+    <!-- City chips -->
+    <div class="card">
+      <div class="ctitle-row">
+        <span class="ctitle">Cities</span>
+        <button class="btn btn-sm" id="cityRefreshBtn" onclick="shuffleCities()">🔀 Shuffle</button>
+      </div>
+      <div id="cityChips" class="chips"></div>
+    </div>
+
+    <!-- Search controls -->
+    <div class="search-action-row">
+      <button class="btn btn-p" id="searchBtn" onclick="runSearch()">
+        <span id="searchBtnTxt">Search Leads</span>
+      </button>
+    </div>
+
+    <!-- Status bar -->
+    <div id="searchStatus" class="statusbar" style="display:none;">
+      <div class="spin"></div>
+      <span id="statusTxt"></span>
+    </div>
+
+    <!-- Disclaimer -->
+    <div id="searchDisclaimer" class="disclaimer" style="display:none;">
+      ⚠️ AI-generated results — always verify business details before reaching out.
+    </div>
+
+    <!-- Filters -->
+    <div id="filterBar" class="fbar" style="display:none;">
+      <span class="fbar-label">Filter:</span>
+      <button class="fchip on" data-filter="all" onclick="setFilter('all')">All</button>
+      <button class="fchip" data-filter="hot" onclick="setFilter('hot')">🔥 Hot (7+)</button>
+      <button class="fchip" data-filter="nosite" onclick="setFilter('nosite')">No Website</button>
+      <button class="fchip" data-filter="unsaved" onclick="setFilter('unsaved')">Not Saved</button>
+    </div>
+
+    <!-- Results -->
+    <div id="searchResults">
+      <div class="empty-state">
+        <div class="eicon">🔍</div>
+        <strong>Ready to find leads</strong>
+        <p>Choose a business type and city above, then hit Search.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TAB 3: PIPELINE ──────────────────────────────────── -->
+  <div class="pane" id="pane-pipeline">
+    <div class="pane-header-row">
+      <div>
+        <h2 class="pane-title">Pipeline</h2>
+      </div>
+      <button class="btn btn-sm" onclick="openManualLeadForm()">+ Add Lead</button>
+    </div>
+    <div id="pipelineBoard" class="pipeline"></div>
+  </div>
+
+  <!-- ─── TAB 4: CLIENTS ───────────────────────────────────── -->
+  <div class="pane" id="pane-clients">
+    <div class="pane-header">
+      <h2 class="pane-title">Clients</h2>
+    </div>
+
+    <!-- Sort + filter bar -->
+    <div class="fbar">
+      <span class="fbar-label">Sort:</span>
+      <button class="fchip on" data-sort="date-desc" onclick="setClientSort('date-desc')">Newest</button>
+      <button class="fchip" data-sort="date-asc" onclick="setClientSort('date-asc')">Oldest</button>
+      <button class="fchip" data-sort="az" onclick="setClientSort('az')">A → Z</button>
+      <button class="fchip" data-sort="za" onclick="setClientSort('za')">Z → A</button>
+      <span class="fbar-divider">│</span>
+      <span class="fbar-label">Filter:</span>
+      <button class="fchip on" data-cf="all" onclick="setClientFilter('all')">All</button>
+      <button class="fchip" data-cf="emailed" onclick="setClientFilter('emailed')">Emailed</button>
+      <button class="fchip" data-cf="not-emailed" onclick="setClientFilter('not-emailed')">Not Emailed</button>
+      <button class="fchip" data-cf="followup" onclick="setClientFilter('followup')">Follow-up Due</button>
+      <button class="fchip" data-cf="stale" onclick="setClientFilter('stale')">Stale</button>
+    </div>
+
+    <div id="clientList" class="llist">
+      <div class="empty-state">
+        <div class="eicon">👥</div>
+        <strong>No clients yet</strong>
+        <p>Save leads from Find Leads or add them manually in Pipeline.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TAB 5: OUTREACH ──────────────────────────────────── -->
+  <div class="pane" id="pane-outreach">
+    <div class="pane-header">
+      <h2 class="pane-title">Outreach</h2>
+      <p class="pane-desc">Paste any business URL to run a live audit and generate a cold email.</p>
+    </div>
+
+    <!-- URL input -->
+    <div class="card">
+      <div class="ctitle">Website Audit</div>
+      <div class="irow">
+        <input type="url" id="auditUrl" placeholder="https://example.com" />
+        <button class="btn btn-p" id="auditBtn" onclick="runAudit()">
+          <span id="auditBtnTxt">Run Audit</span>
+        </button>
+      </div>
+      <div id="auditStatus" class="statusbar" style="display:none;">
+        <div class="spin"></div>
+        <span id="auditStatusTxt"></span>
+      </div>
+      <div id="auditWarn" class="warn-box" style="display:none;"></div>
+      <div id="cooldownBar" style="display:none;" class="cooldown-bar">
+        ⏳ PageSpeed rate limit — retry in <span id="cooldownSecs"></span>s
+      </div>
+    </div>
+
+    <!-- PageSpeed scores (populated after audit) -->
+    <div id="auditScores" style="display:none;" class="card">
+      <div class="ctitle">Audit Results</div>
+      <div id="scoresGrid" class="sgrid"></div>
+      <div id="failingAudits"></div>
+    </div>
+
+    <!-- Generated output -->
+    <div id="generatedOutput" style="display:none;" class="card">
+      <div class="ctitle">Generated Output</div>
+
+      <div class="output-section">
+        <div class="output-label">Subject Lines <span class="output-note">(ranked by open rate)</span></div>
+        <div id="subjectLines"></div>
+      </div>
+
+      <div class="output-section">
+        <div class="output-label">Cold Email</div>
+        <textarea id="emailBody" rows="10"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-sm" onclick="copyOutput('emailBody')">Copy Email</button>
+          <button class="btn btn-sm btn-ok" onclick="saveEditedEmail()">Save Edit</button>
+          <button class="btn btn-sm btn-info" onclick="saveToPipeline()">Save to Pipeline</button>
+        </div>
+      </div>
+
+      <div class="output-section">
+        <div class="output-label">Call Points <span class="output-note">(talk naturally from these)</span></div>
+        <div id="callPoints"></div>
+        <div class="btn-row" style="margin-top:8px;">
+          <button class="btn btn-sm" onclick="copyOutput('callPointsText')">Copy Call Points</button>
+        </div>
+        <input type="hidden" id="callPointsText" />
+      </div>
+    </div>
+
+    <!-- Outreach History -->
+    <div class="card" id="outreachHistoryCard">
+      <div class="ctitle-row">
+        <span class="ctitle">Outreach History</span>
+      </div>
+      <div id="outreachHistory" class="empty-state">No audits saved yet.</div>
+    </div>
+  </div>
+
+  <!-- ─── TAB 6: SETTINGS ──────────────────────────────────── -->
+  <div class="pane" id="pane-settings">
+    <div class="pane-header">
+      <h2 class="pane-title">Settings</h2>
+    </div>
+
+    <!-- API Keys -->
+    <div class="card">
+      <div class="ctitle">🔑 API Keys</div>
+      <div class="warn-box" style="margin-bottom:14px;">
+        ⚠️ Keep your Supabase and Groq keys saved somewhere safe <strong>outside this app</strong>. If you clear browser data, they will be gone.
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Groq API Key</label>
+        <div class="irow">
+          <input type="password" id="groqKeyInput" placeholder="gsk_…" />
+          <button class="btn btn-sm" onclick="saveGroqKey()">Save</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">PageSpeed API Key <span style="font-size:11px;color:var(--t3);font-weight:400;">(optional — removes rate limit)</span></label>
+        <div class="irow">
+          <input type="password" id="psKeyInput" placeholder="AIza…" />
+          <button class="btn btn-sm" onclick="savePsKey()">Save</button>
+        </div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px;">Free key from <a href="https://console.cloud.google.com/apis/library/pagespeedonline.googleapis.com" target="_blank" rel="noopener" style="color:var(--info-t)">Google Cloud Console</a></div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Google Places API Key <span style="font-size:11px;color:var(--t3);font-weight:400;">(required for full digital presence audit)</span></label>
+        <div class="irow">
+          <input type="password" id="placesKeyInput" placeholder="AIza…" />
+          <button class="btn btn-sm" onclick="savePlacesKey()">Save</button>
+        </div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px;">Free key from <a href="https://console.cloud.google.com/apis/library/places-backend.googleapis.com" target="_blank" rel="noopener" style="color:var(--info-t)">Google Cloud Console</a> — enable Places API first.</div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Supabase URL</label>
+        <div class="irow">
+          <input type="text" id="supaUrlInput" placeholder="https://xxxx.supabase.co" />
+          <button class="btn btn-sm" onclick="saveSupaConfig()">Save</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Supabase Anon Key</label>
+        <div class="irow">
+          <input type="password" id="supaKeyInput" placeholder="eyJ…" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Appearance -->
+    <div class="card">
+      <div class="ctitle">🎨 Appearance</div>
+      <div class="setting-row">
+        <span>Dark Mode</span>
+        <button class="toggle-btn" id="darkModeToggle" onclick="toggleDarkMode()">
+          <span class="toggle-thumb"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Data -->
+    <div class="card">
+      <div class="ctitle">💾 Data</div>
+      <div class="btn-row">
+        <button class="btn btn-sm" onclick="exportCSV()">Export All Data (CSV)</button>
+        <button class="btn btn-sm" onclick="openImportCSV()">Import CSV (Merge)</button>
+        <button class="btn btn-sm btn-danger" onclick="confirmClearData()">Clear All Data</button>
+      </div>
+      <input type="file" id="csvImportInput" accept=".csv" style="display:none;" onchange="importCSV(this)" />
+    </div>
+
+    <!-- Deleted leads bin -->
+    <div class="card">
+      <div class="ctitle">🗑 Recently Deleted <span class="ctitle-note">(kept 24 hours)</span></div>
+      <div id="deletedBin" class="empty-state">No recently deleted leads.</div>
+    </div>
+
+  </div><!-- /pane-settings -->
+
+</main><!-- /appMain -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CLIENT MODAL
+═══════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="clientModal">
+  <div class="modal">
+
+    <!-- Modal header -->
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <h3 id="modalName" class="modal-title"></h3>
+        <div id="modalMeta" class="modal-meta"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('clientModal')">✕</button>
+    </div>
+
+    <!-- Pipeline stage selector -->
+    <div class="modal-stage-bar" id="modalStageBar">
+      <span class="stage-chip" data-stage="Lead Found" onclick="setModalStage('Lead Found')">Lead Found</span>
+      <span class="stage-chip" data-stage="Contacted" onclick="setModalStage('Contacted')">Contacted</span>
+      <span class="stage-chip" data-stage="In Conversation" onclick="setModalStage('In Conversation')">In Conversation</span>
+      <span class="stage-chip" data-stage="Won" onclick="setModalStage('Won')">Won ✅</span>
+      <span class="stage-chip" data-stage="On Retainer" onclick="setModalStage('On Retainer')">On Retainer 🔄</span>
+      <span class="stage-chip" data-stage="Lost" onclick="setModalStage('Lost')">Lost</span>
+    </div>
+
+    <!-- Modal tabs -->
+    <div class="modal-tabs">
+      <button class="mtab active" data-mtab="overview" onclick="switchModalTab('overview')">Overview</button>
+      <button class="mtab" data-mtab="notes" onclick="switchModalTab('notes')">Notes</button>
+    </div>
+
+    <!-- Overview tab -->
+    <div class="mod-pane active" id="mod-overview">
+      <div class="two-col">
+        <div class="field-group">
+          <label class="field-label">Business Name</label>
+          <input type="text" id="mod-bname" placeholder="Business name" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Category</label>
+          <input type="text" id="mod-category" placeholder="e.g. Plumber" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">City</label>
+          <input type="text" id="mod-city" placeholder="City, State" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Phone</label>
+          <input type="tel" id="mod-phone" placeholder="+1 (555) 000-0000" />
+        </div>
+        <div class="field-group" style="grid-column:1/-1;">
+          <label class="field-label">Website</label>
+          <input type="url" id="mod-website" placeholder="https://…" />
+        </div>
+      </div>
+
+      <!-- Outreach tracking -->
+      <div class="outreach-track">
+        <div class="track-row">
+          <label class="field-label">Email Sent</label>
+          <div class="irow" style="flex-wrap:nowrap;">
+            <input type="date" id="mod-emailDate" style="flex:1;" />
+            <label class="check-label">
+              <input type="checkbox" id="mod-replied" />
+              Replied
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Next action + follow-up -->
+      <div class="two-col">
+        <div class="field-group">
+          <label class="field-label">Next Action</label>
+          <input type="text" id="mod-nextAction" placeholder="e.g. Send proposal" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Follow-up Date</label>
+          <input type="date" id="mod-followupDate" />
+        </div>
+      </div>
+
+      <!-- Urgent flag -->
+      <div class="field-group">
+        <label class="check-label">
+          <input type="checkbox" id="mod-urgent" />
+          🚨 Mark as Urgent
+        </label>
+      </div>
+
+      <!-- Pipeline movement log -->
+      <div id="mod-moveLog" class="move-log"></div>
+
+      <!-- Modal actions -->
+      <div class="modal-actions">
+        <button class="btn btn-p" onclick="saveModalLead()">Save</button>
+        <button class="btn btn-danger" onclick="deleteModalLead()">Delete</button>
+      </div>
+    </div><!-- /mod-overview -->
+
+    <!-- Notes tab -->
+    <div class="mod-pane" id="mod-notes" style="display:none;">
+      <div class="field-group">
+        <textarea id="mod-noteInput" placeholder="Add a note…" rows="3"></textarea>
+        <button class="btn btn-sm btn-p" style="margin-top:6px;" onclick="addNote()">Add Note</button>
+      </div>
+      <div id="noteList" class="note-list"></div>
+    </div><!-- /mod-notes -->
+
+  </div><!-- /modal -->
+</div><!-- /clientModal -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MANUAL LEAD MODAL
+═══════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="manualLeadModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Add Lead Manually</h3>
+      <button class="modal-close" onclick="closeModal('manualLeadModal')">✕</button>
+    </div>
+    <p class="modal-desc">All fields optional except name.</p>
+    <div class="two-col">
+      <div class="field-group" style="grid-column:1/-1;">
+        <label class="field-label">Business Name <span class="req">*</span></label>
+        <input type="text" id="ml-name" placeholder="Business name" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Website</label>
+        <input type="url" id="ml-website" placeholder="https://…" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Phone</label>
+        <input type="tel" id="ml-phone" placeholder="+1 (555) 000-0000" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">City</label>
+        <input type="text" id="ml-city" placeholder="City, State" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Category</label>
+        <input type="text" id="ml-category" placeholder="e.g. Plumber" />
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-p" onclick="saveManualLead()">Add to Pipeline</button>
+      <button class="btn" onclick="closeModal('manualLeadModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CONFIRM DIALOG
+═══════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="confirmTitle">Are you sure?</h3>
+      <button class="modal-close" onclick="closeModal('confirmModal')">✕</button>
+    </div>
+    <p id="confirmMsg" style="font-size:14px;color:var(--t2);margin-bottom:20px;line-height:1.5;"></p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="confirmOkBtn">Confirm</button>
+      <button class="btn" onclick="closeModal('confirmModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TOAST NOTIFICATION
+═══════════════════════════════════════════════════════════════ -->
+<div id="toast"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     STYLES
+═══════════════════════════════════════════════════════════════ -->
+<style>
+/* ── Reset & tokens ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0d0b;
+  --surf:#161412;
+  --s2:#1e1c19;
+  --s3:#272421;
+  --s4:#302d29;
+  --border:#2a2824;
+  --border2:#3a3834;
+  --text:#f0ede8;
+  --t2:#8a8680;
+  --t3:#4a4844;
+  --ok-bg:rgba(74,222,128,.10);--ok-t:#4ade80;
+  --info-bg:rgba(96,165,250,.10);--info-t:#60a5fa;
+  --warn-bg:rgba(245,158,11,.10);--warn-t:#f0a030;
+  --danger-bg:rgba(220,80,60,.12);--danger-t:#e07060;
+  --pur-bg:rgba(167,139,250,.10);--pur-t:#a78bfa;
+  --gold-glow:0 0 0 2px rgba(234,179,8,.35),0 0 16px rgba(234,179,8,.15);
+  --green-glow:0 0 0 2px rgba(74,222,128,.35),0 0 16px rgba(74,222,128,.12);
+  --r:10px;--rs:6px;
+}
+
+/* Light mode overrides */
+body.light{
+  --bg:#f5f4f1;--surf:#ffffff;--s2:#f0eeea;--s3:#e8e5e0;--s4:#dedad4;
+  --border:#d8d4ce;--border2:#c8c4bc;
+  --text:#1a1816;--t2:#6a6660;--t3:#a0988e;
+}
+
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;transition:background .2s,color .2s}
+
+/* ── Loading screen ── */
+#loadingScreen{
+  position:fixed;inset:0;background:var(--bg);z-index:1000;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .4s;
+}
+#loadingScreen.hide{opacity:0;pointer-events:none}
+#loadingInner{text-align:center}
+#loadingLogo{font-size:48px;margin-bottom:8px}
+#loadingTitle{font-size:18px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px}
+#loadingSubtitle{font-size:12px;color:var(--t2);letter-spacing:1px;text-transform:uppercase;margin-bottom:24px}
+#loadingSpinner{
+  width:32px;height:32px;border:2px solid var(--border2);border-top-color:var(--text);
+  border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;
+}
+#loadingMsg{font-size:12px;color:var(--t3)}
+
+/* ── Backup banner ── */
+#backupBanner{
+  background:var(--warn-bg);border-bottom:1px solid rgba(245,158,11,.25);
+  padding:8px 20px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--warn-t);
+  flex-wrap:wrap;
+}
+#backupBanner span{flex:1}
+#backupBanner button{
+  height:28px;padding:0 12px;border-radius:var(--rs);font-size:12px;font-weight:500;
+  cursor:pointer;border:1px solid rgba(245,158,11,.35);background:var(--warn-bg);
+  color:var(--warn-t);white-space:nowrap;
+}
+#backupBanner #backupDismissBtn{background:transparent;border-color:transparent;color:var(--t2)}
+
+/* ── Header ── */
+header{
+  background:var(--surf);border-bottom:1px solid var(--border);
+  padding:0 1.5rem;height:52px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-icon{width:26px;height:26px;background:var(--s4);border:1px solid var(--border2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.logo-text{font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.logo-divider{color:var(--t3);font-weight:300;margin:0 2px}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.api-pill,.sync-pill{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;background:var(--s2);border:1px solid var(--border2);color:var(--t2)}
+.api-dot,.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--t3);transition:background .3s}
+.api-dot.on,.sync-dot.on{background:var(--ok-t)}
+.sync-dot.busy{background:var(--warn-t)}
+
+/* ── Tab bar ── */
+.tabbar{background:var(--surf);border-bottom:1px solid var(--border);display:flex;padding:0 1.5rem;overflow-x:auto}
+.tbtn{height:40px;padding:0 14px;font-size:13px;font-weight:500;color:var(--t2);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px;position:relative}
+.tbtn:hover{color:var(--text)}
+.tbtn.active{color:var(--text);border-bottom-color:var(--text)}
+.tab-badge{
+  width:7px;height:7px;border-radius:50%;background:var(--danger-t);
+  position:absolute;top:8px;right:6px;
+}
+
+/* ── Main + panes ── */
+main{max-width:1100px;margin:0 auto;padding:1.5rem}
+.pane{display:none}.pane.active{display:block}
+.pane-header{margin-bottom:1.25rem}
+.pane-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.pane-title{font-size:18px;font-weight:700;margin-bottom:3px}
+.pane-desc{font-size:12px;color:var(--t2);line-height:1.4}
+
+/* ── Cards ── */
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-bottom:1rem}
+.ctitle{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--t3);margin-bottom:10px}
+.ctitle-note{font-weight:400;text-transform:none;letter-spacing:0;font-size:11px}
+.ctitle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ctitle-row .ctitle{margin-bottom:0}
+
+/* ── Inputs ── */
+input,textarea,select{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rs);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;width:100%}
+input,select{height:40px;padding:0 12px}
+textarea{padding:10px 12px;resize:vertical;min-height:70px}
+input:focus,textarea:focus,select:focus{border-color:var(--text)}
+input::placeholder,textarea::placeholder{color:var(--t3)}
+select option{background:var(--s3);color:var(--text)}
+input[type=checkbox]{width:auto;height:auto}
+input[type=date]{color-scheme:dark}
+body.light input[type=date]{color-scheme:light}
+
+/* ── Buttons ── */
+.btn{height:40px;padding:0 16px;border-radius:var(--rs);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--s2);color:var(--text);transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.btn:hover{background:var(--s3)}.btn:active{transform:scale(.98)}.btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.btn-p{background:var(--text);color:var(--bg);border-color:var(--text)}.btn-p:hover{opacity:.88;background:var(--text)}
+.btn-sm{height:32px;font-size:12px;padding:0 12px}
+.btn-xs{height:26px;font-size:11px;padding:0 9px;border-radius:4px}
+.btn-ok{background:var(--ok-bg);color:var(--ok-t);border-color:rgba(74,222,128,.2)}
+.btn-warn{background:var(--warn-bg);color:var(--warn-t);border-color:rgba(245,158,11,.2)}
+.btn-danger{background:var(--danger-bg);color:var(--danger-t);border-color:rgba(220,80,60,.2)}
+.btn-info{background:var(--info-bg);color:var(--info-t);border-color:rgba(96,165,250,.2)}
+.btn-pur{background:var(--pur-bg);color:var(--pur-t);border-color:rgba(167,139,250,.2)}
+
+/* ── Layout helpers ── */
+.irow{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.irow>input,.irow>select{flex:1;min-width:120px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.field-group{margin-bottom:12px}
+.field-label{display:block;font-size:11px;font-weight:600;color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.req{color:var(--danger-t)}
+.check-label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--t2);cursor:pointer}
+
+/* ── Chips ── */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.chip{font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;user-select:none}
+.chip:hover{background:var(--s3);color:var(--text)}
+.chip.sel{background:var(--text);color:var(--bg);border-color:var(--text)}
+.chip.city{border-color:rgba(96,165,250,.25);color:var(--info-t);background:var(--info-bg)}
+.chip.city:hover{background:rgba(96,165,250,.2)}
+.chip.city.sel{background:var(--info-t);color:var(--bg)}
+
+/* ── Niche picker ── */
+.niche-wrap{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.niche-wrap select{flex:0 0 200px}
+.niche-chips{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:200px}
+
+/* ── Filter bar ── */
+.fbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:1rem;padding:9px 12px;background:var(--surf);border:1px solid var(--border);border-radius:var(--rs)}
+.fbar-label{font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.fbar-divider{color:var(--border2);padding:0 4px}
+.fchip{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.fchip:hover{color:var(--text)}
+.fchip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+/* ── Status/spinner ── */
+.statusbar{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2);padding:8px 0}
+.spin{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--text);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Disclaimer & warning boxes ── */
+.disclaimer{font-size:12px;color:var(--warn-t);background:var(--warn-bg);border:1px solid rgba(245,158,11,.2);border-radius:var(--rs);padding:8px 12px;margin-bottom:10px}
+.warn-box{font-size:12px;color:var(--warn-t);background:var(--warn-bg);border:1px solid rgba(245,158,11,.2);border-radius:var(--rs);padding:8px 12px;margin-top:8px}
+.info-box{font-size:12px;color:var(--info-t);background:var(--info-bg);border:1px solid rgba(96,165,250,.2);border-radius:var(--rs);padding:8px 12px;margin-top:8px}
+
+/* ── Cooldown bar ── */
+.cooldown-bar{font-size:12px;color:var(--warn-t);background:var(--warn-bg);border:1px solid rgba(245,158,11,.2);border-radius:var(--rs);padding:8px 12px;margin-top:8px;text-align:center}
+
+/* ── Search action row ── */
+.search-action-row{margin-bottom:12px;display:flex;gap:8px;align-items:center}
+
+/* ── Scores grid ── */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:12px}
+.scard{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rs);padding:14px 16px}
+.slabel{font-size:11px;color:var(--t2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.sval{font-size:22px;font-weight:700}
+.ssub{font-size:11px;color:var(--t3);margin-top:2px}
+.sval.ok{color:var(--ok-t)}.sval.info{color:var(--info-t)}.sval.warn{color:var(--warn-t)}.sval.danger{color:var(--danger-t)}
+
+/* ── Outreach output ── */
+.output-section{margin-bottom:16px}
+.output-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);margin-bottom:8px}
+.output-note{font-weight:400;text-transform:none;letter-spacing:0}
+.subject-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rs);margin-bottom:6px;font-size:13px}
+.call-point{padding:6px 0 6px 16px;font-size:13px;color:var(--t2);border-left:2px solid var(--border2);margin-bottom:4px;line-height:1.4}
+
+/* ── Pipeline ── */
+.pipeline{display:flex;gap:10px;overflow-x:auto;padding-bottom:1rem;align-items:flex-start}
+.pipe-col{flex:0 0 220px;background:var(--surf);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.pipe-col-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.pipe-col-title{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+.pipe-count{font-size:11px;padding:1px 7px;border-radius:10px;background:var(--s2);border:1px solid var(--border2);color:var(--t3)}
+.pipe-cards{padding:8px;display:flex;flex-direction:column;gap:7px;min-height:60px}
+.pipe-card{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rs);padding:10px 12px;cursor:pointer;transition:border-color .15s}
+.pipe-card:hover{border-color:var(--text)}
+.pipe-card.urgent{border-color:rgba(220,80,60,.5);background:rgba(220,80,60,.05)}
+.pipe-card.stale{border-color:rgba(245,158,11,.35)}
+.pipe-card.won{box-shadow:var(--gold-glow)}
+.pipe-card.retainer{box-shadow:var(--green-glow)}
+.pc-name{font-size:13px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-meta{font-size:11px;color:var(--t3);margin-bottom:4px}
+.pc-next{font-size:11px;color:var(--info-t);margin-bottom:4px;line-height:1.4}
+.pc-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.badge{font-size:10px;padding:1px 7px;border-radius:10px;border:1px solid;font-weight:600}
+.badge-urgent{background:var(--danger-bg);color:var(--danger-t);border-color:rgba(220,80,60,.25)}
+.badge-stale{background:var(--warn-bg);color:var(--warn-t);border-color:rgba(245,158,11,.25)}
+.badge-won{background:rgba(234,179,8,.12);color:#eab308;border-color:rgba(234,179,8,.3)}
+.badge-retainer{background:var(--ok-bg);color:var(--ok-t);border-color:rgba(74,222,128,.25)}
+.badge-followup{background:var(--info-bg);color:var(--info-t);border-color:rgba(96,165,250,.2)}
+.pc-move{font-size:10px;color:var(--t3);margin-top:5px}
+
+/* ── Home snapshot ── */
+.snapshot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.snap-cell{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rs);padding:12px 14px;cursor:pointer;transition:background .15s,border-color .15s}
+.snap-cell:hover{background:var(--s3);border-color:var(--accent)}
+.snap-label{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.snap-val{font-size:20px;font-weight:700}
+
+/* ── Follow-ups / stale lists ── */
+.focus-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.focus-item:last-child{border-bottom:none}
+.focus-name{font-weight:600}
+.focus-meta{font-size:11px;color:var(--t2);margin-top:1px}
+.focus-action{font-size:11px;color:var(--info-t)}
+
+/* ── Client list ── */
+.llist{display:flex;flex-direction:column;gap:10px}
+.lcard{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color .2s;cursor:pointer}
+.lcard:hover{border-color:var(--border2)}
+.lcard.urgent{border-color:rgba(220,80,60,.4)}
+.lcard.stale{border-color:rgba(245,158,11,.3)}
+.lcard.won{box-shadow:var(--gold-glow)}
+.lcard.retainer{box-shadow:var(--green-glow)}
+.lmain{padding:1rem 1.25rem}
+.ltop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.linfo{flex:1;min-width:0}
+.lname{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lmeta{font-size:12px;color:var(--t2);margin-top:2px}
+.lbadges{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.lactions{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.quick-dial{height:32px;width:32px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:var(--rs);font-size:16px;border:1px solid var(--border2);background:var(--s2);cursor:pointer;transition:all .15s;text-decoration:none}
+.quick-dial:hover{background:var(--s3)}
+.quick-dial.desktop{opacity:.3;pointer-events:none}
+
+/* ── Lead search cards ── */
+.lead-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:10px;transition:border-color .2s;position:relative}
+.lead-card.saved{border-color:rgba(255,255,255,.18)}
+.lead-main{padding:1rem 1.25rem}
+.lead-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.lead-info{flex:1;min-width:0}
+.lead-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.lead-meta{font-size:12px;color:var(--t2)}
+.lead-score{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:8px;font-size:15px;font-weight:700;flex-shrink:0;border:1px solid}
+.score-hot{background:var(--danger-bg);color:var(--danger-t);border-color:rgba(220,80,60,.3)}
+.score-med{background:var(--warn-bg);color:var(--warn-t);border-color:rgba(245,158,11,.3)}
+.score-low{background:var(--s2);color:var(--t2);border-color:var(--border2)}
+.lead-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.lead-tag{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--s3);color:var(--t2);border:1px solid var(--border2)}
+/* Hover quick actions */
+.lead-hover-bar{
+  position:absolute;bottom:0;left:0;right:0;
+  display:flex;gap:6px;padding:8px 12px;
+  background:linear-gradient(to top,var(--surf) 60%,transparent);
+  opacity:0;pointer-events:none;transition:opacity .2s;
+  justify-content:flex-end;align-items:center;
+}
+.lead-card:hover .lead-hover-bar{opacity:1;pointer-events:auto}
+.lead-card.saved .lead-hover-bar .save-btn{display:none}
+
+/* ── Outreach history ── */
+.history-item{padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.history-item:last-child{border-bottom:none}
+.history-url{font-weight:600;color:var(--info-t);word-break:break-all}
+.history-date{font-size:11px;color:var(--t3);margin-top:2px}
+.history-email-preview{font-size:12px;color:var(--t2);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── Modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:flex-start;justify-content:center;z-index:200;padding:1rem;backdrop-filter:blur(4px);overflow-y:auto}
+.modal-bg.open{display:flex}
+.modal{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:1.5rem;max-width:640px;width:100%;margin:auto;margin-top:2rem;margin-bottom:2rem}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:16px}
+.modal-title-wrap{flex:1;min-width:0}
+.modal-title{font-size:16px;font-weight:700}
+.modal-meta{font-size:12px;color:var(--t2);margin-top:3px}
+.modal-desc{font-size:13px;color:var(--t2);margin-bottom:16px}
+.modal-close{width:30px;height:30px;border:none;background:var(--s2);color:var(--t2);border-radius:6px;cursor:pointer;font-size:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:var(--s3);color:var(--text)}
+.modal-stage-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.stage-chip{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .15s}
+.stage-chip:hover{color:var(--text)}
+.stage-chip.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.modal-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px}
+.mtab{height:36px;padding:0 16px;font-size:13px;font-weight:500;color:var(--t2);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.mtab:hover{color:var(--text)}
+.mtab.active{color:var(--text);border-bottom-color:var(--text)}
+.mod-pane{}
+.modal-actions{display:flex;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
+.outreach-track{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px}
+.track-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.track-row .field-label{margin:0;white-space:nowrap}
+.move-log{font-size:11px;color:var(--t3);margin-top:6px;padding:6px 0}
+.note-list{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.note-item{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rs);padding:10px 12px;font-size:13px;line-height:1.5;color:var(--t2);position:relative}
+.note-item .note-del{position:absolute;top:6px;right:8px;font-size:12px;cursor:pointer;color:var(--t3);border:none;background:none;padding:2px 5px}
+.note-item .note-del:hover{color:var(--danger-t)}
+
+/* ── Settings ── */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+.toggle-btn{width:44px;height:24px;border-radius:12px;background:var(--border2);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle-btn.on{background:var(--ok-t)}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:white;transition:transform .2s;display:block}
+.toggle-btn.on .toggle-thumb{transform:translateX(20px)}
+
+/* ── Empty states ── */
+.empty-state{display:flex;flex-direction:column;align-items:center;text-align:center;padding:2rem 1rem;color:var(--t2);gap:8px}
+.eicon{font-size:32px;margin-bottom:4px}
+.empty-state strong{font-size:14px;color:var(--text)}
+.empty-state p{font-size:12px;max-width:260px;line-height:1.5}
+
+/* ── Toast ── */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--s4);border:1px solid var(--border2);border-radius:8px;
+  padding:10px 18px;font-size:13px;color:var(--text);
+  opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;
+  z-index:500;white-space:nowrap;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── Deleted bin ── */
+.bin-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.bin-item:last-child{border-bottom:none}
+.bin-name{font-weight:600}
+.bin-meta{font-size:11px;color:var(--t3);margin-top:1px}
+
+/* ── Responsive ── */
+@media(max-width:640px){
+  .two-col{grid-template-columns:1fr}
+  .tabbar{padding:0 .75rem}
+  main{padding:1rem .75rem}
+  .pipeline{flex-direction:column}
+  .pipe-col{flex:none;width:100%}
+  header{padding:0 1rem}
+  .logo-text{font-size:12px}
+  .modal{padding:1.25rem}
+  .niche-wrap{flex-direction:column}
+  .niche-wrap select{flex:none;width:100%}
+  .lead-hover-bar{opacity:1;pointer-events:auto;position:static;background:none;padding:0 12px 12px;justify-content:flex-start}
+}
+</style>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     JAVASCRIPT — Steps 3-14 Full Implementation
+═══════════════════════════════════════════════════════════════ -->
+<script>
+/* ════════════════════════════════════════════════════════════════
+   STEP 3 — CONFIG & STATE
+════════════════════════════════════════════════════════════════ */
+let GROQ_KEY    = localStorage.getItem('groq_key')    || '';
+let SUPA_URL    = localStorage.getItem('supa_url')    || '';
+let SUPA_KEY    = localStorage.getItem('supa_key')    || '';
+let PS_KEY      = localStorage.getItem('ps_key')      || '';
+let PLACES_KEY  = localStorage.getItem('places_key')  || '';
+
+const GROQ_MODEL_PRIMARY  = 'llama-3.3-70b-versatile';
+const GROQ_MODEL_FALLBACK = 'llama3-8b-8192';
+
+let leads          = [];
+let appData        = { outreachHistory: [] };
+let searchResults  = [];
+let currentLeadId  = null;
+let activeFilter   = 'all';
+let clientSort     = 'date-desc';
+let clientFilter   = 'all';
+let selectedNiches = [];
+let selectedCities = [];
+let displayedCities = [];
+let psRateLimitUntil = 0;
+let psCountdown    = null;
+let lastAuditData  = null;
+let confirmCallback = null;
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 13 — UTILITY FUNCTIONS
+════════════════════════════════════════════════════════════════ */
+const uid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const esc  = s  => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const el   = id => document.getElementById(id);
+
+function isStale(lead) {
+  if (!lead.updatedAt) return false;
+  return (Date.now() - new Date(lead.updatedAt).getTime()) > 7 * 24 * 60 * 60 * 1000;
+}
+function getFollowUpsDue(arr) {
+  const today = new Date().toISOString().slice(0,10);
+  return arr.filter(l => l.followupDate && l.followupDate <= today && !['Won','On Retainer','Lost'].includes(l.stage));
+}
+function getAging(lead) {
+  if (!lead.updatedAt) return null;
+  return Math.floor((Date.now() - new Date(lead.updatedAt).getTime()) / 86400000);
+}
+function validateURL(url) {
+  try { const u = new URL(url); return u.protocol==='http:' || u.protocol==='https:'; } catch { return false; }
+}
+function isMobile() { return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent); }
+function fmtDate(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function formatAgo(isoDate) {
+  if (!isoDate) return '';
+  const days = Math.floor((Date.now()-new Date(isoDate).getTime())/86400000);
+  if (days===0) return 'today'; if (days===1) return '1 day ago'; return `${days} days ago`;
+}
+function updateRedDots() {
+  const fu    = getFollowUpsDue(leads).length;
+  const stale = leads.filter(l=>isStale(l)&&!['Won','On Retainer','Lost'].includes(l.stage)).length;
+  el('badge-home').style.display     = (fu+stale) ? '' : 'none';
+  el('badge-pipeline').style.display = stale      ? '' : 'none';
+  el('badge-clients').style.display  = fu         ? '' : 'none';
+  // leads badge: show when there are unread search results sitting on the tab
+  el('badge-leads').style.display    = searchResults.length ? '' : 'none';
+  // outreach badge: never flagged automatically — keep hidden
+  el('badge-outreach').style.display = 'none';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 4 — SUPABASE SYNC
+════════════════════════════════════════════════════════════════ */
+function supaHeaders(extra={}) {
+  return { 'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json', ...extra };
+}
+async function loadFromSupabase() {
+  if (!SUPA_URL||!SUPA_KEY) return;
+  setSyncBusy(true);
+  try {
+    const [lr,dr] = await Promise.all([
+      fetch(`${SUPA_URL}/rest/v1/leads?select=*`,   {headers:supaHeaders()}),
+      fetch(`${SUPA_URL}/rest/v1/app_data?select=*`,{headers:supaHeaders()})
+    ]);
+    if (!lr.ok) throw new Error('leads fetch failed');
+    leads = (await lr.json()).map(r=>r.data);
+    if (dr.ok) {
+      const rows = await dr.json();
+      const oh = rows.find(r=>r.id==='outreach_history');
+      if (oh) appData.outreachHistory = oh.data.history||[];
+    }
+    setSyncOn(true);
+  } catch(e) { console.warn('Supabase load:',e); setSyncOn(false); }
+  finally { setSyncBusy(false); }
+}
+async function upsertLead(lead) {
+  lead.updatedAt = new Date().toISOString();
+  const idx = leads.findIndex(l=>l.id===lead.id);
+  if (idx>=0) leads[idx]=lead; else leads.push(lead);
+  if (!SUPA_URL||!SUPA_KEY) return;
+  setSyncBusy(true);
+  try {
+    await fetch(`${SUPA_URL}/rest/v1/leads`,{
+      method:'POST',
+      headers:supaHeaders({'Prefer':'resolution=merge-duplicates,return=minimal'}),
+      body:JSON.stringify({id:lead.id,data:lead,updated_at:lead.updatedAt})
+    });
+    setSyncOn(true);
+  } catch(e){ console.warn('Supabase upsert:',e); setSyncOn(false); }
+  finally { setSyncBusy(false); }
+}
+async function deleteLeadFromSupa(id) {
+  if (!SUPA_URL||!SUPA_KEY) return;
+  try { await fetch(`${SUPA_URL}/rest/v1/leads?id=eq.${id}`,{method:'DELETE',headers:supaHeaders()}); } catch(e){ console.warn(e); }
+}
+async function saveAppData() {
+  if (!SUPA_URL||!SUPA_KEY) return;
+  try {
+    await fetch(`${SUPA_URL}/rest/v1/app_data`,{
+      method:'POST',
+      headers:supaHeaders({'Prefer':'resolution=merge-duplicates,return=minimal'}),
+      body:JSON.stringify({id:'outreach_history',data:{history:appData.outreachHistory},updated_at:new Date().toISOString()})
+    });
+  } catch(e){ console.warn('AppData save:',e); }
+}
+function setSyncOn(on)    { el('syncDot').className='sync-dot'+(on?' on':''); }
+function setSyncBusy(busy){ el('syncDot').className='sync-dot'+(busy?' busy':' on'); }
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 5 — HOME TAB
+════════════════════════════════════════════════════════════════ */
+function renderHome() {
+  const due = getFollowUpsDue(leads);
+  el('followupList').innerHTML = due.length
+    ? due.map(l=>`<div class="focus-item" onclick="openClientModal('${l.id}')">
+        <div><div class="focus-name">${esc(l.name)}</div><div class="focus-meta">${esc(l.city||'')}${l.category?' · '+esc(l.category):''}</div></div>
+        <div class="focus-action">${esc(l.nextAction||'Follow up')}</div></div>`).join('')
+    : '<div style="font-size:13px;color:var(--t3);padding:8px 0">No follow-ups due today.</div>';
+
+  const stale = leads.filter(l=>isStale(l)&&!['Won','On Retainer','Lost'].includes(l.stage));
+  el('staleList').innerHTML = stale.length
+    ? stale.map(l=>`<div class="focus-item" onclick="openClientModal('${l.id}')">
+        <div><div class="focus-name">${esc(l.name)}</div><div class="focus-meta">${esc(l.stage||'Lead Found')} · ${getAging(l)??0} days ago</div></div>
+        <div class="focus-action" style="color:var(--warn-t)">Stale</div></div>`).join('')
+    : '<div style="font-size:13px;color:var(--t3);padding:8px 0">No stale leads.</div>';
+
+  const stages = ['Lead Found','Contacted','In Conversation','Won','On Retainer','Lost'];
+  el('pipelineSnapshot').innerHTML = stages.map(s=>{
+    const count = leads.filter(l=>(l.stage||'Lead Found')===s).length;
+    const col = s==='Won'?'color:var(--warn-t)':s==='On Retainer'?'color:var(--ok-t)':s==='Lost'?'color:var(--danger-t)':'';
+    return `<div class="snap-cell" onclick="switchTab('pipeline')" style="cursor:pointer" title="View ${s} leads"><div class="snap-label">${s}</div><div class="snap-val" style="${col}">${count}</div></div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 6 — FIND LEADS TAB
+════════════════════════════════════════════════════════════════ */
+const CITY_LIST = [
+  'Austin TX','Nashville TN','Phoenix AZ','Charlotte NC','Tampa FL','Denver CO',
+  'Raleigh NC','Jacksonville FL','Las Vegas NV','Fort Worth TX','San Antonio TX',
+  'Atlanta GA','Orlando FL','Columbus OH','Salt Lake City UT','Dallas TX','Houston TX',
+  'Miami FL','Seattle WA','Portland OR','Minneapolis MN','Kansas City MO','Indianapolis IN',
+  'Richmond VA','Oklahoma City OK','Colorado Springs CO','Scottsdale AZ','Boise ID',
+  'Durham NC','New Orleans LA','Madison WI','Milwaukee WI','Pittsburgh PA','Cincinnati OH','Huntsville AL','Sacramento CA'
+];
+
+const NICHE_DATA = {
+  'Home Services':        ['Plumber','Electrician','HVAC Technician','Roofer','Handyman','Painter','Gutter Cleaner','Chimney Sweep','Insulation Contractor','Window Cleaner','Pressure Washer','Waterproofing Specialist','Foundation Repair','Deck Builder','Fence Installer','Garage Door Repair','Locksmith','Irrigation Specialist','Pool Service','Siding Contractor','Home Inspector','Mold Remediation','Air Duct Cleaner','Tile Installer','Drywall Contractor','Flooring Installer','Cabinet Painter','Caulking Service','Storm Door Installer','Skylight Installer'],
+  'Cleaning Services':    ['House Cleaner','Commercial Cleaner','Carpet Cleaner','Window Washer','Janitorial Service','Move-In/Out Cleaner','Post-Construction Cleaner','Upholstery Cleaner','Power Washing','Biohazard Cleaner','Office Cleaning','Airbnb Cleaner','Floor Polishing','Blind Cleaner','Vent Cleaner','Pool Cleaner','Dryer Vent Cleaner','Trash Can Cleaning','Odor Removal','Restaurant Hood Cleaning','Medical Facility Cleaner','Green Cleaning Service','Chimney Cleaner','Solar Panel Cleaner','Boat Cleaner'],
+  'Landscaping':          ['Lawn Care Service','Tree Trimmer','Landscape Designer','Irrigation Installer','Mulching Service','Leaf Removal','Snow Removal','Hardscape Builder','Sod Installer','Weed Control','Garden Maintenance','Stump Removal','Hedge Trimmer','Outdoor Lighting Installer','Turf Installer','Tree Removal','Retaining Wall Builder','French Drain Installer','Erosion Control','Landscape Renovation','Pest Control','Fertilization Service','Flower Bed Design','Rock Garden Installer','Outdoor Kitchen Builder'],
+  'Automotive':           ['Auto Repair Shop','Car Detailer','Windshield Repair','Tire Shop','Transmission Specialist','Auto Body Shop','Mobile Mechanic','Oil Change Service','Brake Repair','Car Wash','Tint Shop','Wheel Alignment','Used Car Dealer','RV Repair','Motorcycle Repair','Auto Glass Repair','Car Audio Installer','Truck Accessory Shop','Fleet Service','Classic Car Restoration','Diesel Mechanic','Emissions Testing','EV Charger Installer','Vehicle Inspection','Roadside Assistance'],
+  'Food & Dining':        ['Restaurant','Food Truck','Bakery','Coffee Shop','Catering Company','Pizza Place','Sandwich Shop','Juice Bar','Ice Cream Shop','Brewery','Wine Bar','Meal Prep Service','Butcher Shop','Specialty Grocery','Thai Restaurant','Sushi Restaurant','Mexican Restaurant','Mediterranean Restaurant','Breakfast Diner','Health Food Cafe','Cookie Shop','Bubble Tea Shop','Personal Chef','Dessert Bar','Smoothie Bar'],
+  'Health & Wellness':    ['Chiropractor','Acupuncturist','Massage Therapist','Nutritionist','Physical Therapist','Naturopath','Health Coach','Meditation Studio','Yoga Studio','Pilates Studio','Reiki Practitioner','Hypnotherapist','Sleep Specialist','IV Therapy Clinic','Functional Medicine Doctor','Mental Health Therapist','Addiction Counselor','Allergy Clinic','Corporate Wellness','Float Tank Therapy','Occupational Therapist','Telehealth Provider','Kinesiology','Audiology Clinic','Holistic Wellness Center'],
+  'Beauty & Personal':    ['Hair Salon','Barber Shop','Nail Salon','Waxing Studio','Eyebrow Bar','Lash Extension Studio','Spray Tan','Permanent Makeup','Microblading','Skincare Clinic','Med Spa','Tattoo Studio','Piercing Shop','Brow Lamination','Hair Extension Specialist','Makeup Artist','Threading Studio','Chemical Peel Clinic','Hair Color Studio','Men\'s Grooming','Organic Beauty Salon','Body Sculpting Studio','Eyelash Tinting','Mobile Beauty Service','Luxury Facial Studio'],
+  'Fitness':              ['Personal Trainer','Gym','CrossFit Box','MMA Gym','Boxing Gym','Dance Studio','Barre Studio','Spin Studio','Swimming School','Rock Climbing Gym','Martial Arts School','Boot Camp Trainer','Stretching Studio','Sports Performance Coach','Kids Gymnastics','Pilates Reformer Studio','Cycling Studio','Golf Trainer','Tennis Coach','Swim Coach','Youth Sports Training','Rehabilitation Fitness','Strength & Conditioning','Outdoor Bootcamp','Rowing Studio'],
+  'Construction & Trades':['General Contractor','Kitchen Remodeler','Bathroom Remodeler','Flooring Installer','Concrete Contractor','Masonry Contractor','Steel Fabricator','Welding Shop','Cabinet Maker','Custom Home Builder','Addition Contractor','Basement Finisher','ADU Builder','Commercial Build-Out','Permit Expediter','Stucco Contractor','Metal Roofer','Solar Panel Installer','Fire Damage Restoration','Water Damage Restoration','Countertop Installer','Epoxy Floor Installer','Window Installer','Pool Builder','Carport Installer'],
+  'Real Estate':          ['Real Estate Agent','Property Manager','Real Estate Photographer','Home Stager','Mortgage Broker','Title Company','Short-Term Rental Manager','Commercial Realtor','Appraisal Service','HOA Management','Relocation Specialist','Land Surveyor','Buyers Agent','Real Estate Attorney','Foreclosure Specialist','Property Inspector','Drone Real Estate Photographer','Airbnb Consultant','Real Estate Virtual Tour','Investment Property Advisor','Real Estate Coach','Rental Arbitrage Consultant','Commercial Property Manager','1031 Exchange Specialist','Lease Negotiator'],
+  'Pet Services':         ['Dog Groomer','Dog Trainer','Pet Sitter','Dog Walker','Veterinarian','Pet Boarding','Exotic Pet Vet','Aquarium Service','Dog Daycare','Pet Photographer','Raw Pet Food Supplier','Mobile Vet','Animal Behaviorist','Pet Cremation Service','Cat Boarding','Horse Trainer','Horse Boarding','Pet Insurance Advisor','Dog Breeder','Animal Rescue','Pet Massage Therapist','Reptile Vet','Bird Specialist','Pet Supply Store','Doggy Swim Center'],
+  'Education & Childcare':['Tutoring Center','Daycare Center','After School Program','Music Teacher','Art Classes','STEM Tutoring','Preschool','Language School','Driving School','Swimming Lessons','Chess Club','Coding for Kids','Special Needs Tutor','SAT Prep','Homeschool Co-op','College Counselor','ESL Teacher','Speech Therapist','Academic Coach','Test Prep Coach','Summer Camp','Online Tutor','Early Childhood Education','Montessori School','Music Theory Teacher'],
+  'Photography & Media':  ['Wedding Photographer','Commercial Photographer','Real Estate Photographer','Headshot Photographer','Event Photographer','Videographer','Drone Operator','Photo Booth Rental','Video Editor','Podcast Production','Social Media Manager','Brand Photographer','Product Photographer','Live Streaming Service','Content Creator','Podcast Editor','YouTube Manager','Animation Studio','Photo Retouching Service','Corporate Video Production','Aerial Photographer','360° Tour Creator','Documentary Filmmaker','Stock Photography','Music Video Director'],
+  'Events & Entertainment':['Event Planner','Wedding Planner','DJ Service','Band for Hire','Photo Booth Rental','Party Rental','Florist','Balloon Artist','Magician','Face Painter','Escape Room','Party Bus','Comedy Club','Event Venue','Catering Company','Corporate Event Planner','Kids Party Entertainer','Hypnotist','Trivia Night Host','Karaoke Service','Murder Mystery Host','Clown','Photo Mosaic Artist','Fireworks Display','Live Painter'],
+  'Professional Services':['Accountant','Bookkeeper','Business Coach','HR Consultant','Recruiting Agency','Marketing Agency','PR Firm','Graphic Designer','Web Designer','Copywriter','IT Support','Virtual Assistant','Tax Preparer','Grant Writer','Notary Public','Patent Attorney','Executive Coach','Financial Planner','Insurance Broker','Franchise Consultant','Business Plan Writer','Import/Export Consultant','Interpreter','Transcription Service','Business Formation Agent'],
+  'Legal & Financial':    ['Personal Injury Attorney','Family Law Attorney','Estate Planning Attorney','Business Attorney','Immigration Lawyer','Tax Attorney','Financial Advisor','Insurance Agent','Mortgage Broker','Credit Repair Service','Bankruptcy Attorney','Employment Lawyer','Criminal Defense Attorney','Wills & Trusts','Real Estate Attorney','Workers Comp Attorney','DUI Attorney','Social Security Attorney','Tax Resolution Service','Debt Settlement','Accounting Firm','Retirement Planner','Asset Protection Attorney','Nonprofit Attorney','Business Valuation Expert'],
+  'Medical & Dental':     ['Dentist','Orthodontist','Dental Implants','Pediatric Dentist','Optometrist','Dermatologist','Primary Care Doctor','Urgent Care Clinic','Plastic Surgeon','Weight Loss Clinic','Hearing Aid Center','Podiatrist','Sports Medicine Doctor','Pain Management Clinic','Fertility Clinic','Cosmetic Dentist','Emergency Dentist','Medical Spa','Telehealth Provider','Home Health Aide','Wound Care Clinic','Urology Clinic','Cardiology Clinic','Chiropractic & Wellness','Sleep Study Clinic'],
+  'Moving & Storage':     ['Local Moving Company','Long Distance Mover','Junk Removal','Storage Facility','Piano Mover','Furniture Assembly','Packing Service','Office Mover','Senior Move Manager','Estate Cleanout','Donation Pickup','Commercial Mover','Last-Mile Delivery','Freight Broker','PODS Alternative','Auto Transport','White Glove Moving','Art & Antique Mover','Corporate Relocation','Container Storage','Document Shredding','Records Storage','Specialty Equipment Mover','Portable Storage','College Move-In Service'],
+  'Technology & IT':      ['IT Support','Managed Service Provider','Cybersecurity Firm','Web Developer','App Developer','Data Recovery','Network Installer','Security Camera Installer','Smart Home Installer','VoIP Provider','SEO Agency','POS System Installer','Computer Repair','Cloud Services','Software Company','AI Consulting','Tech Training','Helpdesk Service','Digital Signage','Fiber Optic Installer','Surveillance System','Server Setup','Drone Service','Barcode System Installer','Print Management'],
+  'Printing & Marketing': ['Print Shop','Sign Maker','Vehicle Wrap','Banner Printing','Promo Products','Graphic Design','Direct Mail','Brochure Design','Trade Show Display','Embroidery Shop','Screen Printer','Logo Design','Email Marketing Agency','Flyer Distribution','Billboard Company','Podcast Advertising','Brand Strategy','Naming Agency','Packaging Designer','Copywriting Agency','Content Marketing Agency','Photography for Marketing','Infographic Design','Catalog Design','Sticker Printing'],
+  'Security':             ['Security Guard Company','Alarm Installation','CCTV Installer','Access Control','Locksmith','Cybersecurity','Bodyguard Service','Commercial Security','Home Security','Fire Alarm Installer','Safe Installation','Background Check Service','Parking Enforcement','HOA Security','Drone Security','Private Investigator','Event Security','GPS Fleet Tracking','Drug Testing Service','Executive Protection','Penetration Testing','Fraud Investigation','Retail Loss Prevention','School Safety Consultant','Vault Installation'],
+  'Hospitality & Travel': ['Hotel','Bed & Breakfast','Vacation Rental','Tour Guide','Travel Agency','Limousine Service','Airport Shuttle','Boat Rental','RV Park','Campsite','Wine Tour','Food Tour','Corporate Travel','Adventure Tour','Cruise Planner','Glamping Retreat','Luxury Villa Rental','Eco Tourism','Wedding Destination','Cooking Class','Brewery Tour','Ghost Tour','Historic Tour','Segway Tour','Yacht Charter'],
+  'Clothing & Alterations':['Tailor','Dry Cleaner','Alterations Shop','Uniform Supplier','Custom T-Shirt','Embroidery','Laundry Service','Bridal Alterations','Shoe Repair','Leather Repair','Hat Maker','Costume Shop','Swimwear Designer','Workwear Supplier','Clothing Rental','Custom Suit Tailor','Wedding Dress Designer','Monogramming Service','Screen Print Shop','Sustainable Clothing','Vintage Clothing Restoration','Activewear Brand','Knitwear Designer','Promotional Apparel','School Spirit Wear'],
+  'Retail & Specialty':   ['Boutique Clothing','Jewelry Store','Florist','Gift Shop','Vintage Store','Sports Equipment','Bike Shop','Music Store','Book Store','Toy Store','Comic Book Shop','Cigar Lounge','Gun Shop','Trophy & Awards','Vape Shop','Antique Shop','Collectibles Store','Art Gallery','Craft Supply Store','Electronic Repair Shop','Coin Dealer','Gold Buyer','Pawn Shop','Hobby Shop','Knife Shop'],
+  'Religious & Community':['Church','Mosque','Synagogue','Community Center','Non-Profit','Food Bank','Animal Shelter','Youth Organization','Senior Center','Addiction Recovery Center','Mental Health Clinic','Life Coaching','Career Counseling','Grief Counseling','Yoga Retreat','Buddhist Temple','Hindu Temple','Quaker Meeting','Interfaith Center','Crisis Hotline','Domestic Violence Shelter','Veterans Support Group','Refugee Aid Organization','Disability Services','Neighborhood Association']
+};
+
+function initLeadsTab() {
+  const cat = el('nicheCat');
+  cat.innerHTML = '<option value="">— Select category —</option>';
+  Object.keys(NICHE_DATA).forEach(c => { cat.innerHTML += `<option value="${esc(c)}">${esc(c)}</option>`; });
+  shuffleCities();
+}
+
+function populateSubniches() {
+  const cat   = el('nicheCat').value;
+  const items = NICHE_DATA[cat]||[];
+  selectedNiches = [];
+  el('nicheChips').innerHTML = items.map(n =>
+    `<span class="chip" data-niche="${esc(n)}" onclick="toggleNiche(this,this.dataset.niche)">${esc(n)}</span>`).join('');
+}
+
+function toggleNiche(chip, name) {
+  chip.classList.toggle('sel');
+  selectedNiches = chip.classList.contains('sel')
+    ? [...new Set([...selectedNiches, name])]
+    : selectedNiches.filter(n=>n!==name);
+}
+
+function shuffleCities() {
+  displayedCities = [...CITY_LIST].sort(()=>Math.random()-.5).slice(0,18);
+  selectedCities  = [];
+  renderCityChips();
+}
+
+function renderCityChips() {
+  el('cityChips').innerHTML = displayedCities.map(c =>
+    `<span class="chip city ${selectedCities.includes(c)?'sel':''}" onclick="toggleCity(this,'${esc(c)}')">${esc(c)}</span>`).join('');
+}
+
+function toggleCity(chip, city) {
+  chip.classList.toggle('sel');
+  selectedCities = chip.classList.contains('sel')
+    ? [...new Set([...selectedCities, city])]
+    : selectedCities.filter(c=>c!==city);
+}
+
+async function runSearch() {
+  if (!GROQ_KEY)              { showToast('Add your Groq key in Settings first'); return; }
+  if (!selectedNiches.length) { showToast('Select at least one business type');   return; }
+  if (!selectedCities.length) { showToast('Select at least one city');            return; }
+
+  el('searchBtn').disabled = true;
+  el('searchBtnTxt').textContent = 'Searching…';
+  el('searchStatus').style.display = '';
+  el('statusTxt').textContent = `Searching for ${selectedNiches.slice(0,3).join(', ')} in ${selectedCities.join(', ')}…`;
+  el('filterBar').style.display = 'none';
+  el('searchDisclaimer').style.display = 'none';
+
+  const prompt = `You are a lead generation assistant for a web design agency.
+Find 20 plausible local businesses of these types: ${selectedNiches.join(', ')}.
+Located in: ${selectedCities.join(', ')}.
+Return a JSON array of exactly 20 objects:
+{"name":"Business Name","website":"https://example.com or empty string","phone":"(555) 123-4567 or empty","city":"City ST","category":"Business Type","score":7,"hasWebsite":true,"issues":["slow load time","no mobile version"]}
+score = 1-10 (how badly they need web help, 10=worst site).
+issues = 2-4 specific web problems. If no website, issues=["no website"].
+Return ONLY the JSON array. No explanation, no markdown, no backticks.`;
+
+  try {
+    const data = await groqCall(prompt, 2500);
+    const raw  = (data.choices[0].message.content||'').trim().replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(raw);
+    searchResults = (Array.isArray(parsed)?parsed:parsed.businesses||[]).slice(0,20);
+    searchResults.forEach(r=>{ r._id=uid(); });
+    activeFilter='all';
+    el('filterBar').style.display='';
+    el('searchDisclaimer').style.display='';
+    document.querySelectorAll('#filterBar .fchip').forEach(c=>c.classList.toggle('on',c.dataset.filter==='all'));
+    renderSearchResults();
+  } catch(e) {
+    el('searchResults').innerHTML=`<div class="warn-box">Search failed: ${esc(e.message)}. Check your Groq key and try again.</div>`;
+  } finally {
+    el('searchBtn').disabled=false;
+    el('searchBtnTxt').textContent='Search Leads';
+    el('searchStatus').style.display='none';
+  }
+}
+
+function setFilter(f) {
+  activeFilter=f;
+  document.querySelectorAll('#filterBar .fchip').forEach(c=>c.classList.toggle('on',c.dataset.filter===f));
+  renderSearchResults();
+}
+
+function renderSearchResults() {
+  let res = [...searchResults];
+  const savedNames = leads.map(l=>l.name.toLowerCase());
+  if (activeFilter==='hot')    res=res.filter(r=>r.score>=7);
+  if (activeFilter==='nosite') res=res.filter(r=>!r.hasWebsite||!r.website);
+  if (activeFilter==='unsaved')res=res.filter(r=>!savedNames.includes(r.name.toLowerCase()));
+  if (!res.length) {
+    el('searchResults').innerHTML='<div class="empty-state"><span style="color:var(--t3);font-size:13px">No results match this filter.</span></div>';
+    return;
+  }
+  el('searchResults').innerHTML = res.map(r=>{
+    const saved      = savedNames.includes(r.name.toLowerCase());
+    const scoreCls   = r.score>=8?'score-hot':r.score>=5?'score-med':'score-low';
+    const tags       = (r.issues||[]).map(i=>`<span class="lead-tag">${esc(i)}</span>`).join('');
+    const dialBtn    = r.phone ? `<a class="quick-dial${isMobile()?'':' desktop'}" href="tel:${r.phone.replace(/\D/g,'')}" onclick="event.stopPropagation()" title="Call">📞</a>` : '';
+    const webBtn     = r.website ? `<a class="btn btn-xs btn-info" href="${esc(r.website)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🌐 Site</a>` : '';
+    return `<div class="lead-card${saved?' saved':''}" id="lc-${r._id}">
+      <div class="lead-main">
+        <div class="lead-top">
+          <div class="lead-info">
+            <div class="lead-name">${esc(r.name)}${saved?'<span class="badge badge-won" style="font-size:10px;margin-left:6px">Saved</span>':''}</div>
+            <div class="lead-meta">${esc(r.city)} · ${esc(r.category)}</div>
+            ${r.phone?`<div class="lead-meta">${esc(r.phone)}</div>`:''}
+            ${r.website?`<div class="lead-meta"><a href="${esc(r.website)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--info-t)">${esc(r.website)}</a></div>`:''}
+          </div>
+          <div class="lead-score ${scoreCls}">${r.score}</div>
+        </div>
+        <div class="lead-tags">${tags}</div>
+      </div>
+      <div class="lead-hover-bar">
+        ${dialBtn}${webBtn}
+        <button class="btn btn-xs btn-ok save-btn" onclick="saveSearchLead('${r._id}')">+ Save</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveSearchLead(tmpId) {
+  const r = searchResults.find(x=>x._id===tmpId);
+  if (!r) return;
+  const dup = leads.find(l=>l.name.toLowerCase()===r.name.toLowerCase());
+  if (dup) {
+    showConfirm('Duplicate Detected',`"${r.name}" is already in your pipeline (${dup.stage}). Save anyway?`,()=>doSaveSearchLead(r));
+    return;
+  }
+  doSaveSearchLead(r);
+}
+
+function doSaveSearchLead(r) {
+  const lead = {
+    id:uid(),name:r.name,website:r.website||'',phone:r.phone||'',city:r.city||'',
+    category:r.category||'',score:r.score||0,issues:r.issues||[],hasWebsite:!!r.website,
+    stage:'Lead Found',notes:[],stageHistory:[{stage:'Lead Found',date:new Date().toISOString()}],
+    urgent:false,nextAction:'',followupDate:'',emailSentDate:'',replied:false,
+    savedAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+  };
+  upsertLead(lead);
+  showToast(`"${lead.name}" saved to pipeline`);
+  renderSearchResults();
+  updateRedDots();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 7 — PIPELINE TAB
+════════════════════════════════════════════════════════════════ */
+const PIPELINE_STAGES = ['Lead Found','Contacted','In Conversation','Won','On Retainer','Lost'];
+
+function renderPipeline() {
+  el('pipelineBoard').innerHTML = PIPELINE_STAGES.map(stage=>{
+    const cards = leads.filter(l=>(l.stage||'Lead Found')===stage);
+    const label = stage==='Won'?'Won ✅':stage==='On Retainer'?'On Retainer 🔄':stage;
+    return `<div class="pipe-col">
+      <div class="pipe-col-header">
+        <span class="pipe-col-title">${label}</span>
+        <span class="pipe-count">${cards.length}</span>
+      </div>
+      <div class="pipe-cards">${cards.length
+        ? cards.map(l=>renderPipeCard(l)).join('')
+        : '<div style="font-size:11px;color:var(--t3);text-align:center;padding:10px 0">Empty</div>'
+      }</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPipeCard(l) {
+  const stale = isStale(l), isWon=l.stage==='Won', isRet=l.stage==='On Retainer';
+  const lastMove = (l.stageHistory||[]).slice(-1)[0];
+  let cls='pipe-card';
+  if (l.urgent) cls+=' urgent'; else if (stale) cls+=' stale';
+  if (isWon) cls+=' won'; if (isRet) cls+=' retainer';
+  const badges=[
+    l.urgent?'<span class="badge badge-urgent">🚨 Urgent</span>':'',
+    stale?'<span class="badge badge-stale">Stale</span>':'',
+    isWon?'<span class="badge badge-won">🏆 Won</span>':'',
+    isRet?'<span class="badge badge-retainer">🔄 Retainer</span>':'',
+    getFollowUpsDue([l]).length?'<span class="badge badge-followup">Follow-up Due</span>':''
+  ].filter(Boolean).join('');
+  return `<div class="${cls}" onclick="openClientModal('${l.id}')">
+    <div class="pc-name">${esc(l.name)}</div>
+    <div class="pc-meta">${esc(l.city||'')}${l.category?' · '+esc(l.category):''}</div>
+    ${l.nextAction?`<div class="pc-next">${esc(l.nextAction)}</div>`:''}
+    ${badges?`<div class="pc-badges">${badges}</div>`:''}
+    ${lastMove?`<div class="pc-move">Moved to ${esc(lastMove.stage)} ${formatAgo(lastMove.date)}</div>`:''}
+  </div>`;
+}
+
+function openManualLeadForm() {
+  ['ml-name','ml-website','ml-phone','ml-city','ml-category'].forEach(id=>{const e=el(id);if(e)e.value='';});
+  openModal('manualLeadModal');
+}
+
+function saveManualLead() {
+  const name=(el('ml-name').value||'').trim();
+  if (!name){ showToast('Business name is required'); return; }
+  const lead={
+    id:uid(),name,website:el('ml-website').value.trim(),phone:el('ml-phone').value.trim(),
+    city:el('ml-city').value.trim(),category:el('ml-category').value.trim(),
+    score:0,issues:[],hasWebsite:!!el('ml-website').value.trim(),
+    stage:'Lead Found',notes:[],stageHistory:[{stage:'Lead Found',date:new Date().toISOString()}],
+    urgent:false,nextAction:'',followupDate:'',emailSentDate:'',replied:false,
+    savedAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+  };
+  upsertLead(lead);
+  closeModal('manualLeadModal');
+  showToast(`"${lead.name}" added`);
+  renderPipeline(); updateRedDots();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 8 — CLIENTS TAB
+════════════════════════════════════════════════════════════════ */
+function setClientSort(s) {
+  clientSort=s;
+  document.querySelectorAll('[data-sort]').forEach(b=>b.classList.toggle('on',b.dataset.sort===s));
+  renderClients();
+}
+function setClientFilter(f) {
+  clientFilter=f;
+  document.querySelectorAll('[data-cf]').forEach(b=>b.classList.toggle('on',b.dataset.cf===f));
+  renderClients();
+}
+function renderClients() {
+  let list=[...leads];
+  if (clientFilter==='emailed')     list=list.filter(l=>l.emailSentDate);
+  if (clientFilter==='not-emailed') list=list.filter(l=>!l.emailSentDate);
+  if (clientFilter==='followup')    list=list.filter(l=>getFollowUpsDue([l]).length);
+  if (clientFilter==='stale')       list=list.filter(l=>isStale(l));
+  if (clientSort==='date-desc') list.sort((a,b)=>new Date(b.savedAt||0)-new Date(a.savedAt||0));
+  if (clientSort==='date-asc')  list.sort((a,b)=>new Date(a.savedAt||0)-new Date(b.savedAt||0));
+  if (clientSort==='az')        list.sort((a,b)=>a.name.localeCompare(b.name));
+  if (clientSort==='za')        list.sort((a,b)=>b.name.localeCompare(a.name));
+  if (!list.length) {
+    el('clientList').innerHTML='<div class="empty-state"><div class="eicon">👥</div><strong>No clients found</strong><p>Try a different filter.</p></div>';
+    return;
+  }
+  el('clientList').innerHTML=list.map(l=>{
+    const stale=isStale(l),isWon=l.stage==='Won',isRet=l.stage==='On Retainer',fuDue=getFollowUpsDue([l]).length>0;
+    let cls='lcard';
+    if(l.urgent)cls+=' urgent';else if(stale)cls+=' stale';
+    if(isWon)cls+=' won';if(isRet)cls+=' retainer';
+    const badges=[
+      `<span class="badge" style="background:var(--s3);color:var(--t2);border-color:var(--border2)">${esc(l.stage||'Lead Found')}</span>`,
+      l.urgent?'<span class="badge badge-urgent">🚨</span>':'',
+      stale?'<span class="badge badge-stale">Stale</span>':'',
+      fuDue?'<span class="badge badge-followup">Follow-up Due</span>':'',
+      isWon?'<span class="badge badge-won">🏆 Won</span>':'',
+      isRet?'<span class="badge badge-retainer">🔄 Retainer</span>':'',
+      l.emailSentDate?'<span class="badge" style="background:var(--ok-bg);color:var(--ok-t);border-color:rgba(74,222,128,.2)">Emailed</span>':''
+    ].filter(Boolean).join('');
+    const dialBtn=l.phone?`<a class="quick-dial${isMobile()?'':' desktop'}" href="tel:${l.phone.replace(/\D/g,'')}" onclick="event.stopPropagation()" title="Call">📞</a>`:'';
+    return `<div class="${cls}" onclick="openClientModal('${l.id}')">
+      <div class="lmain">
+        <div class="ltop">
+          <div class="linfo">
+            <div class="lname">${esc(l.name)}</div>
+            <div class="lmeta">${[l.city,l.category].filter(Boolean).map(esc).join(' · ')}</div>
+            ${l.website?`<div class="lmeta"><a href="${esc(l.website)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--info-t)">${esc(l.website)}</a></div>`:''}
+            <div class="lbadges">${badges}</div>
+          </div>
+          <div class="lactions">${dialBtn}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 9 — CLIENT MODAL
+════════════════════════════════════════════════════════════════ */
+function openClientModal(id) {
+  currentLeadId=id;
+  const l=leads.find(x=>x.id===id);
+  if(!l) return;
+  el('modalName').textContent=l.name;
+  el('modalMeta').textContent=[l.city,l.category].filter(Boolean).join(' · ');
+  document.querySelectorAll('.stage-chip').forEach(c=>c.classList.toggle('active',c.dataset.stage===(l.stage||'Lead Found')));
+  el('mod-bname').value       =l.name||'';
+  el('mod-category').value    =l.category||'';
+  el('mod-city').value        =l.city||'';
+  el('mod-phone').value       =l.phone||'';
+  el('mod-website').value     =l.website||'';
+  el('mod-emailDate').value   =l.emailSentDate||'';
+  el('mod-replied').checked   =!!l.replied;
+  el('mod-nextAction').value  =l.nextAction||'';
+  el('mod-followupDate').value=l.followupDate||'';
+  el('mod-urgent').checked    =!!l.urgent;
+  const lastMove=(l.stageHistory||[]).slice(-1)[0];
+  el('mod-moveLog').textContent=lastMove?`Last move: ${lastMove.stage} — ${formatAgo(lastMove.date)}`:'';
+  renderNoteList(l);
+  switchModalTab('overview');
+  openModal('clientModal');
+}
+
+function setModalStage(s) {
+  document.querySelectorAll('.stage-chip').forEach(c=>c.classList.toggle('active',c.dataset.stage===s));
+}
+
+function saveModalLead() {
+  const l=leads.find(x=>x.id===currentLeadId);
+  if(!l) return;
+  const newStage=document.querySelector('.stage-chip.active')?.dataset.stage||l.stage||'Lead Found';
+  if(newStage!==l.stage){
+    if(!l.stageHistory)l.stageHistory=[];
+    l.stageHistory.push({stage:newStage,date:new Date().toISOString()});
+  }
+  // Suggest In Conversation whenever saving at Contacted with replied checked
+  if(el('mod-replied').checked && newStage==='Contacted')
+    setTimeout(()=>showToast('They replied — consider moving to In Conversation'),400);
+  l.stage        =newStage;
+  l.name         =el('mod-bname').value.trim()||l.name;
+  l.category     =el('mod-category').value.trim();
+  l.city         =el('mod-city').value.trim();
+  l.phone        =el('mod-phone').value.trim();
+  l.website      =el('mod-website').value.trim();
+  l.emailSentDate=el('mod-emailDate').value;
+  l.replied      =el('mod-replied').checked;
+  l.nextAction   =el('mod-nextAction').value.trim();
+  l.followupDate =el('mod-followupDate').value;
+  l.urgent       =el('mod-urgent').checked;
+  upsertLead(l);
+  closeModal('clientModal');
+  showToast('Saved');
+  renderAll();
+}
+
+function deleteModalLead() {
+  const l=leads.find(x=>x.id===currentLeadId);
+  if(!l) return;
+  showConfirm('Delete Lead',`Move "${l.name}" to the deleted bin? Kept for 24 hours.`,()=>{
+    const bin=getDeletedBin();
+    bin.push({...l,deletedAt:new Date().toISOString()});
+    saveDeletedBin(bin);
+    leads=leads.filter(x=>x.id!==currentLeadId);
+    deleteLeadFromSupa(currentLeadId);
+    closeModal('clientModal');
+    showToast(`"${l.name}" moved to bin`);
+    renderAll();
+  });
+}
+
+function addNote() {
+  const l=leads.find(x=>x.id===currentLeadId);
+  if(!l) return;
+  const txt=(el('mod-noteInput').value||'').trim();
+  if(!txt) return;
+  if(!l.notes)l.notes=[];
+  l.notes.unshift({id:uid(),text:txt});
+  el('mod-noteInput').value='';
+  upsertLead(l);
+  renderNoteList(l);
+}
+
+function deleteNote(noteId) {
+  const l=leads.find(x=>x.id===currentLeadId);
+  if(!l) return;
+  l.notes=(l.notes||[]).filter(n=>n.id!==noteId);
+  upsertLead(l);
+  renderNoteList(l);
+}
+
+function renderNoteList(l) {
+  const notes=l.notes||[];
+  el('noteList').innerHTML=notes.length
+    ?notes.map(n=>`<div class="note-item">${esc(n.text)}<button class="note-del" onclick="deleteNote('${n.id}')">✕</button></div>`).join('')
+    :'<div style="font-size:12px;color:var(--t3);padding:8px 0">No notes yet.</div>';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 10 — OUTREACH TAB
+════════════════════════════════════════════════════════════════ */
+function decodeHtmlEntities(str) {
+  if(!str) return '';
+  const txt=document.createElement('textarea');txt.innerHTML=str;return txt.value;
+}
+
+async function fetchPageMeta(url) {
+  const result={title:'',metaDesc:'',h1:'',socialLinks:[],hasPhone:false,hasAddress:false,isHTTPS:url.startsWith('https://'),corsBlocked:false,extractedName:''};
+  try {
+    const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),8000);
+    const res=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,{signal:ctrl.signal});
+    clearTimeout(timer);
+    const data=await res.json();const html=data.contents||'';
+    const titleMatch=html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    result.title=decodeHtmlEntities((titleMatch?titleMatch[1]:'').trim());
+    const metaMatch=html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)||html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i);
+    result.metaDesc=decodeHtmlEntities((metaMatch?metaMatch[1]:'').trim());
+    const h1Match=html.match(/<h1[^>]*>([^<]*)<\/h1>/i);
+    result.h1=decodeHtmlEntities((h1Match?h1Match[1].replace(/<[^>]+>/g,''):'').trim());
+    const socials=['facebook.com','instagram.com','twitter.com','x.com','linkedin.com','tiktok.com','youtube.com'];
+    result.socialLinks=socials.filter(s=>html.toLowerCase().includes(s));
+    result.hasPhone=/(\+1[\s-]?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4}|tel:|phone:|\(\d{3}\)\s*\d{3}[-.\s]\d{4})/.test(html);
+    result.hasAddress=/(street|avenue|blvd|suite|\d+\s+\w+\s+(st|ave|rd|blvd|dr|ln|way)\b)/i.test(html);
+    if(result.title) result.extractedName=result.title.replace(/\s*[-\u2013\u00b7\u2022|]\s*.+$/,'').trim();
+  } catch{result.corsBlocked=true;}
+  return result;
+}
+
+async function fetchPlacesData(businessName,city,isGuessed) {
+  if(!PLACES_KEY) return {skipped:true};
+  const query=`${businessName} ${city}`.trim();
+  const result={found:false,isGuessed,query};
+  try {
+    const res=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':PLACES_KEY,'X-Goog-FieldMask':'places.displayName,places.rating,places.userRatingCount,places.regularOpeningHours,places.photos,places.businessStatus,places.websiteUri'},
+      body:JSON.stringify({textQuery:query,maxResultCount:1})
+    });
+    if(!res.ok){const err=await res.json().catch(()=>({}));return{...result,error:err.error?.message||`Places error ${res.status}`};}
+    const data=await res.json();const place=data.places?.[0];
+    if(!place) return{...result,noListing:true};
+    return{...result,found:true,name:place.displayName?.text||'',rating:place.rating||null,reviewCount:place.userRatingCount||0,hasHours:!!(place.regularOpeningHours),photoCount:place.photos?.length||0,businessStatus:place.businessStatus||'',hasWebsite:!!place.websiteUri};
+  } catch(e){return{...result,error:e.message};}
+}
+
+async function runAudit() {
+  const url=(el('auditUrl').value||'').trim();
+  if(!url){showToast('Enter a URL first');return;}
+  if(!validateURL(url)){el('auditWarn').textContent='\u26a0\ufe0f Invalid URL \u2014 must start with https://';el('auditWarn').style.display='';return;}
+  el('auditWarn').style.display='none';
+  if(!GROQ_KEY){showToast('Add your Groq key in Settings first');return;}
+  const existing=appData.outreachHistory.find(e=>e.url===url);
+  if(existing){el('auditWarn').innerHTML='\u26a0\ufe0f You\u2019ve audited this URL before. Generating a fresh audit.';el('auditWarn').style.display='';}
+  if(Date.now()<psRateLimitUntil){showCooldown(Math.ceil((psRateLimitUntil-Date.now())/1000));return;}
+
+  el('auditBtn').disabled=true;el('auditBtnTxt').textContent='Running\u2026';
+  el('auditStatus').style.display='';el('auditScores').style.display='none';el('generatedOutput').style.display='none';
+  const warnings=[];
+
+  // Step 1 — PageSpeed + HTML fetch in parallel
+  el('auditStatusTxt').textContent='Scanning website\u2026';
+  let psData=null,noSite=false,metaData=null;
+  try {
+    const [psRes,meta]=await Promise.all([
+      fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile${PS_KEY?'&key='+encodeURIComponent(PS_KEY):''}`),
+      fetchPageMeta(url)
+    ]);
+    metaData=meta;
+    if(meta.corsBlocked) warnings.push('\u26a0\ufe0f Page content scan was blocked by this site \u2014 working with available data only.');
+    if(!meta.isHTTPS) warnings.push('\u26a0\ufe0f Site uses HTTP not HTTPS \u2014 flagged as a security issue.');
+    if(psRes.status===429){psRateLimitUntil=Date.now()+100000;showCooldown(100);el('auditBtn').disabled=false;el('auditBtnTxt').textContent='Run Audit';el('auditStatus').style.display='none';return;}
+    if(psRes.ok){const j=await psRes.json();if(!j.error)psData=extractPageSpeed(j);else noSite=true;}
+    else noSite=true;
+  } catch{noSite=true;}
+  if(psData){renderAuditScores(psData);el('auditScores').style.display='';}
+
+  // Step 2 — Extract business name and city
+  el('auditStatusTxt').textContent='Identifying business\u2026';
+  let businessName='',businessCity='',nameIsGuessed=false;
+  try {
+    const domain=new URL(url).hostname.replace('www.','');
+    const nameHint=(metaData?.extractedName||metaData?.h1||'');
+    const res=await groqCall(`Extract business name and city from: URL: ${url}. Page title hint: "${nameHint}". Return ONLY JSON: {"name":"Business Name","city":"City ST","confidence":"high|low"}. Use confidence low if unsure.`,150);
+    const raw=(res.choices[0].message.content||'').trim().replace(/```json|```/g,'').trim();
+    const p=JSON.parse(raw);
+    businessName=p.name||domain;businessCity=p.city||'';nameIsGuessed=p.confidence==='low';
+    if(nameIsGuessed) warnings.push(`\u26a0\ufe0f Business name guessed as "${esc(businessName)}" \u2014 verify before sending.`);
+    if(!businessCity) warnings.push('\u26a0\ufe0f Could not determine business city \u2014 Places search may be less accurate.');
+  } catch{
+    businessName=new URL(url).hostname.replace('www.','');nameIsGuessed=true;
+    warnings.push(`\u26a0\ufe0f Business name guessed as "${esc(businessName)}" \u2014 verify before sending.`);
+  }
+
+  // Step 3 — Google Places lookup
+  el('auditStatusTxt').textContent='Checking digital presence\u2026';
+  let placesData=null;
+  try {
+    placesData=await fetchPlacesData(businessName,businessCity,nameIsGuessed);
+    if(placesData.skipped) warnings.push('\u2139\ufe0f Google Places key not set \u2014 digital presence check skipped. Add key in Settings.');
+    else if(placesData.error) warnings.push(`\u26a0\ufe0f Places lookup failed: ${esc(placesData.error)}`);
+    else if(placesData.noListing) warnings.push(`\u26a0\ufe0f No Google Business listing found for "${esc(businessName)}" \u2014 flagged as opportunity in email.`);
+    else if(placesData.isGuessed) warnings.push(`\u26a0\ufe0f Places result based on guessed name "${esc(businessName)}" \u2014 verify it matched the right business.`);
+  } catch(e){warnings.push(`\u26a0\ufe0f Places lookup error: ${esc(e.message)}`);}
+
+  if(warnings.length){el('auditWarn').innerHTML=warnings.map(w=>`<div>${w}</div>`).join('');el('auditWarn').style.display='';}
+
+  // Step 4 — Generate outreach
+  el('auditStatusTxt').textContent='Writing outreach\u2026';
+  try {
+    const prompt=buildOutreachPrompt(url,businessName,businessCity,psData,noSite,metaData,placesData);
+    const res=await groqCall(prompt,1500);
+    const raw=(res.choices[0].message.content||'').trim().replace(/```json|```/g,'').trim();
+    const p=JSON.parse(raw);
+    el('subjectLines').innerHTML=(p.subjects||[]).map(s=>`<div class="subject-item"><span>${esc(s)}</span><button class="btn btn-xs" onclick="copyText(this.previousElementSibling.textContent)">Copy</button></div>`).join('');
+    el('emailBody').value=p.email||'';
+    el('callPoints').innerHTML=(p.callPoints||[]).map(pt=>`<div class="call-point">\u2022 ${esc(pt)}</div>`).join('');
+    el('callPointsText').value=(p.callPoints||[]).map(pt=>'\u2022 '+pt).join('\n');
+    el('generatedOutput').style.display='';
+    lastAuditData={url,psData,metaData,placesData,businessName,businessCity,generated:p};
+    const autoEntry={id:uid(),url,email:p.email||'',originalEmail:p.email||'',subjects:p.subjects||[],savedAt:new Date().toISOString()};
+    appData.outreachHistory.unshift(autoEntry);saveAppData();renderOutreachHistory();
+    showToast('Audit complete');
+  } catch(e){
+    const prev=warnings.length?el('auditWarn').innerHTML:'';
+    el('auditWarn').innerHTML=prev+`<div>Generation failed: ${esc(e.message)}</div>`;
+    el('auditWarn').style.display='';
+  } finally {
+    el('auditBtn').disabled=false;el('auditBtnTxt').textContent='Run Audit';el('auditStatus').style.display='none';
+  }
+}
+
+function buildOutreachPrompt(url,businessName,city,psData,noSite,meta,places) {
+  const websiteCtx=noSite
+    ?'The business has no website or their site is currently down.'
+    :`Website performance: Performance ${psData.performance}%, SEO ${psData.seo}%, Accessibility ${psData.accessibility}%. Top failing audits: ${psData.failingAudits.join(', ')}.${!meta?.isHTTPS?' Site uses HTTP not HTTPS.':''}`;
+  const metaCtx=(!meta||meta.corsBlocked)?'Page content scan unavailable.':[
+    meta.metaDesc?'':'No meta description found.',
+    meta.h1?'':'No H1 heading found.',
+    meta.socialLinks.length?`Linked social profiles: ${meta.socialLinks.join(', ')}.`:'No social media links found on site.',
+    meta.hasPhone?'Phone number visible on site.':'No phone number visible on site.',
+  ].filter(Boolean).join(' ');
+  const placesCtx=!places||places.skipped?'Google Business Profile data unavailable.':
+    places.noListing?'No Google Business Profile found \u2014 major opportunity.':
+    places.error?'Google Places lookup failed.':
+    `Google Business Profile: Rating ${places.rating||'none'}, ${places.reviewCount||0} reviews, ${places.hasHours?'hours set':'no hours set'}, ${places.photoCount} photos, ${places.hasWebsite?'website linked':'no website linked'}.`;
+
+  return `You write cold outreach emails for Caleb Lane at Riptide Studios \u2014 a professional web design, SEO and digital services agency.
+
+Business: ${businessName}${city?', '+city:''}
+URL: ${url}
+
+WEBSITE DATA:
+${websiteCtx}
+
+PAGE CONTENT:
+${metaCtx}
+
+DIGITAL PRESENCE:
+${placesCtx}
+
+YOUR TASK: Write a cold outreach email, 3 subject lines, and call points.
+
+TONE RULES \u2014 non-negotiable:
+- Open with a genuine, specific compliment about this type of business. Use the business name.
+- NEVER criticise. Frame every issue as an untapped opportunity.
+- NO technical jargon. No "LCP", "CLS", "meta description", "PageSpeed score". Plain business language only.
+- NO specific numbers or load times. Say "slow on mobile" not exact seconds.
+- Confident and convincing but warm and human. This is a sales email.
+- Use the business name naturally at least twice.
+- Feel like it was written specifically for them, not copy-pasted.
+- End with: "Would a quick 10 minute call this week make sense?"
+- Final line must be exactly: "Kind regards,"
+- Length: 180-220 words.
+
+SUBJECT LINES:
+- 3 options: one curiosity-driven, one urgency-driven, one benefit-driven.
+- Use business name in at least one.
+- Human and personal, not like a marketing template.
+
+CALL POINTS:
+- Plain language bullet points for Caleb to glance at during a call.
+- Each translates a technical issue into a business consequence.
+- No jargon, no numbers.
+
+Return ONLY this exact JSON (no markdown, no backticks, no extra text):
+{"subjects":["subject 1","subject 2","subject 3"],"email":"full email body here","callPoints":["point 1","point 2","point 3","point 4","point 5"]}`;
+}
+
+function copyOutput(id) {
+  const node=el(id);
+  copyText(('value' in node) ? node.value : node.textContent);
+}
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(()=>showToast('Copied!')).catch(()=>{
+    const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('Copied!');
+  });
+}
+
+function saveEditedEmail() {
+  if(!lastAuditData){showToast('Run an audit first');return;}
+  const entry={id:uid(),url:lastAuditData.url,email:el('emailBody').value,originalEmail:lastAuditData.generated?.email||'',subjects:lastAuditData.generated?.subjects||[],savedAt:new Date().toISOString()};
+  appData.outreachHistory.unshift(entry);
+  saveAppData();renderOutreachHistory();showToast('Saved to Outreach History');
+}
+
+async function saveToPipeline() {
+  if(!lastAuditData){showToast('Run an audit first');return;}
+  const url=lastAuditData.url;
+  const name=lastAuditData.businessName||new URL(url).hostname.replace('www.','');
+  const city=lastAuditData.businessCity||'';
+  const category='';
+  const dup=leads.find(l=>l.name.toLowerCase()===name.toLowerCase());
+  if(dup){showToast(`"${name}" already in pipeline (${dup.stage})`);return;}
+  const lead={id:uid(),name,website:url,phone:'',city,category,score:0,issues:lastAuditData.psData?.failingAudits||[],hasWebsite:true,stage:'Lead Found',notes:[],stageHistory:[{stage:'Lead Found',date:new Date().toISOString()}],urgent:false,nextAction:'',followupDate:'',emailSentDate:new Date().toISOString().slice(0,10),replied:false,savedAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+  upsertLead(lead);showToast(`"${name}" saved to pipeline`);updateRedDots();
+}
+
+function renderOutreachHistory() {
+  const hist=appData.outreachHistory||[];
+  el('outreachHistory').innerHTML=hist.length
+    ?hist.map(e=>`<div class="history-item">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+        <div style="flex:1;min-width:0">
+          <div class="history-url">${esc(e.url)}</div>
+          <div class="history-date">${fmtDate(e.savedAt)}</div>
+          <div class="history-email-preview">${esc((e.email||'').slice(0,100))}…</div>
+        </div>
+        <button class="btn btn-xs btn-danger" onclick="deleteHistoryEntry('${e.id}')">Delete</button>
+      </div></div>`).join('')
+    :'<div style="font-size:13px;color:var(--t3);padding:8px 0">No audits saved yet.</div>';
+}
+
+function deleteHistoryEntry(id) {
+  appData.outreachHistory=appData.outreachHistory.filter(e=>e.id!==id);
+  saveAppData();renderOutreachHistory();showToast('Entry deleted');
+}
+
+function showCooldown(secs) {
+  el('cooldownBar').style.display='';el('cooldownSecs').textContent=secs;
+  if(psCountdown)clearInterval(psCountdown);
+  let r=secs;
+  psCountdown=setInterval(()=>{r--;el('cooldownSecs').textContent=r;if(r<=0){clearInterval(psCountdown);el('cooldownBar').style.display='none';}},1000);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 11 — SETTINGS TAB
+════════════════════════════════════════════════════════════════ */
+function initSettingsTab() {
+  el('groqKeyInput').value   = GROQ_KEY   ? '••••••••' : '';
+  el('psKeyInput').value     = PS_KEY     ? '••••••••' : '';
+  el('placesKeyInput').value = PLACES_KEY ? '••••••••' : '';
+  el('supaUrlInput').value =SUPA_URL||'';
+  el('supaKeyInput').value =SUPA_KEY?'••••••••':'';
+  el('darkModeToggle').classList.toggle('on',!document.body.classList.contains('light'));
+  renderDeletedBin();
+}
+
+function savePsKey() {
+  const val=(el('psKeyInput').value||'').trim();
+  if(val&&val!=='••••••••'){PS_KEY=val;localStorage.setItem('ps_key',val);el('psKeyInput').value='••••••••';showToast('PageSpeed key saved');}
+  else if(!val){PS_KEY='';localStorage.removeItem('ps_key');showToast('PageSpeed key cleared');}
+}
+function savePlacesKey() {
+  const val=(el('placesKeyInput').value||'').trim();
+  if(val&&val!=='••••••••'){PLACES_KEY=val;localStorage.setItem('places_key',val);el('placesKeyInput').value='••••••••';showToast('Places key saved');}
+  else if(!val){PLACES_KEY='';localStorage.removeItem('places_key');showToast('Places key cleared');}
+}
+function saveGroqKey() {
+  const val=(el('groqKeyInput').value||'').trim();
+  if(!val||val==='••••••••'){showToast('Enter a valid Groq key');return;}
+  GROQ_KEY=val;localStorage.setItem('groq_key',val);
+  el('groqKeyInput').value='••••••••';el('groqDot').className='api-dot on';showToast('Groq key saved');
+}
+
+function saveSupaConfig() {
+  const url=(el('supaUrlInput').value||'').trim();
+  const key=(el('supaKeyInput').value||'').trim();
+  if(!url){showToast('Enter Supabase URL');return;}
+  SUPA_URL=url;localStorage.setItem('supa_url',url);
+  if(key&&key!=='••••••••'){SUPA_KEY=key;localStorage.setItem('supa_key',key);el('supaKeyInput').value='••••••••';}
+  showToast('Supabase config saved — reconnecting…');
+  loadFromSupabase().then(()=>renderAll());
+}
+
+function toggleDarkMode() {
+  const isLight=document.body.classList.toggle('light');
+  el('darkModeToggle').classList.toggle('on',!isLight);
+  localStorage.setItem('theme',isLight?'light':'dark');
+}
+
+function exportCSV() {
+  const rows=[['ID','Name','Website','Phone','City','Category','Score','Stage','Urgent','Next Action','Follow-up Date','Email Sent','Replied','Saved At']];
+  leads.forEach(l=>rows.push([l.id,l.name,l.website||'',l.phone||'',l.city||'',l.category||'',l.score||'',l.stage||'',l.urgent?'Yes':'No',l.nextAction||'',l.followupDate||'',l.emailSentDate||'',l.replied?'Yes':'No',l.savedAt||'']));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blobUrl=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const a=document.createElement('a');a.href=blobUrl;a.download=`riptide-leads-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(blobUrl),1000);
+  showToast('CSV exported');el('backupBanner').style.display='none';
+}
+
+function openImportCSV(){el('csvImportInput').click();}
+
+function parseCSVLine(line) {
+  const result=[]; let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+    else if(ch===','&&!inQ){result.push(cur.trim());cur='';}
+    else cur+=ch;
+  }
+  result.push(cur.trim()); return result;
+}
+
+function importCSV(input) {
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const lines=e.target.result.split('\n').filter(Boolean);
+    const headers=parseCSVLine(lines[0]).map(v=>v.toLowerCase());
+    let imported=0;
+    for(let i=1;i<lines.length;i++){
+      const vals=parseCSVLine(lines[i]);
+      const row={};headers.forEach((h,j)=>row[h]=vals[j]||'');
+      const name=row['name'];if(!name)continue;
+      const existId=row['id'];
+      if(existId?leads.find(l=>l.id===existId):leads.find(l=>l.name.toLowerCase()===name.toLowerCase()))continue;
+      const lead={id:existId||uid(),name,website:row['website']||'',phone:row['phone']||'',city:row['city']||'',category:row['category']||'',score:Number(row['score'])||0,stage:row['stage']||'Lead Found',urgent:row['urgent']==='Yes',nextAction:row['next action']||'',followupDate:row['follow-up date']||'',emailSentDate:row['email sent']||'',replied:row['replied']==='Yes',notes:[],stageHistory:[],savedAt:row['saved at']||new Date().toISOString(),updatedAt:new Date().toISOString()};
+      leads.push(lead);await upsertLead(lead);imported++;
+    }
+    input.value='';showToast(`Imported ${imported} lead${imported!==1?'s':''}`);renderAll();
+  };
+  reader.readAsText(file);
+}
+
+function confirmClearData() {
+  showConfirm('Clear All Data','This permanently deletes ALL leads and cannot be undone.',async()=>{
+    await Promise.all(leads.map(l=>deleteLeadFromSupa(l.id)));
+    leads=[];appData.outreachHistory=[];localStorage.removeItem('deleted_bin');
+    saveAppData();showToast('All data cleared');renderAll();
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════
+   DELETED BIN
+════════════════════════════════════════════════════════════════ */
+function getDeletedBin(){try{return JSON.parse(localStorage.getItem('deleted_bin')||'[]');}catch{return[];}}
+function saveDeletedBin(bin){localStorage.setItem('deleted_bin',JSON.stringify(bin.filter(l=>(Date.now()-new Date(l.deletedAt).getTime())<86400000)));}
+
+function renderDeletedBin() {
+  const bin=getDeletedBin();
+  saveDeletedBin(bin);
+  const fresh=bin.filter(l=>(Date.now()-new Date(l.deletedAt).getTime())<86400000);
+  el('deletedBin').innerHTML=fresh.length
+    ?fresh.map(l=>{const h=Math.ceil(24-(Date.now()-new Date(l.deletedAt).getTime())/3600000);return `<div class="bin-item"><div><div class="bin-name">${esc(l.name)}</div><div class="bin-meta">Deleted ${formatAgo(l.deletedAt)} · expires in ${h}h</div></div><button class="btn btn-xs btn-ok" onclick="restoreLead('${l.id}')">Restore</button></div>`;}).join('')
+    :'<div style="font-size:13px;color:var(--t3);padding:8px 0">No recently deleted leads.</div>';
+}
+
+function restoreLead(id) {
+  const bin=getDeletedBin(),lead=bin.find(l=>l.id===id);if(!lead)return;
+  delete lead.deletedAt;lead.updatedAt=new Date().toISOString();
+  leads.push(lead);upsertLead(lead);saveDeletedBin(bin.filter(l=>l.id!==id));
+  renderDeletedBin();showToast(`"${lead.name}" restored`);renderAll();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 12 — BACKUP REMINDER
+════════════════════════════════════════════════════════════════ */
+function scheduleBackupReminders() {
+  checkBackupTime();setInterval(checkBackupTime,60000);
+  el('backupExportBtn').onclick=()=>{exportCSV();el('backupBanner').style.display='none';};
+  el('backupDismissBtn').onclick=()=>{el('backupBanner').style.display='none';localStorage.setItem('backup_dismissed',new Date().toISOString().slice(0,13));};
+}
+function checkBackupTime() {
+  const now=new Date(),hour=now.getHours();
+  if(hour!==10&&hour!==16)return;
+  if(localStorage.getItem('backup_dismissed')===now.toISOString().slice(0,13))return;
+  if(leads.length>0)el('backupBanner').style.display='';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CONFIRM DIALOG
+════════════════════════════════════════════════════════════════ */
+function showConfirm(title,msg,cb) {
+  el('confirmTitle').textContent=title;el('confirmMsg').textContent=msg;
+  confirmCallback=cb;openModal('confirmModal');
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  el('confirmOkBtn')?.addEventListener('click',()=>{closeModal('confirmModal');if(confirmCallback){confirmCallback();confirmCallback=null;}});
+});
+
+/* ════════════════════════════════════════════════════════════════
+   GROQ API
+════════════════════════════════════════════════════════════════ */
+async function groqCall(prompt,maxTokens=1000,model=GROQ_MODEL_PRIMARY) {
+  const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+    body:JSON.stringify({model,max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+  });
+  if(res.status===503||res.status===429){
+    if(model===GROQ_MODEL_PRIMARY){console.warn('Falling back to',GROQ_MODEL_FALLBACK);return groqCall(prompt,maxTokens,GROQ_MODEL_FALLBACK);}
+    const retry=res.headers.get('retry-after')||'60';throw new Error(`Groq rate limit hit. Try again in ${retry}s.`);
+  }
+  if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.error?.message||`Groq error ${res.status}`);}
+  return res.json();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════════════════════════ */
+function switchTab(name) {
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  el('pane-'+name).classList.add('active');
+}
+function openModal(id){el(id).classList.add('open');}
+function closeModal(id){el(id).classList.remove('open');}
+function switchModalTab(name) {
+  document.querySelectorAll('.mtab').forEach(t=>t.classList.toggle('active',t.dataset.mtab===name));
+  document.querySelectorAll('.mod-pane').forEach(p=>p.style.display='none');
+  el('mod-'+name).style.display='';
+}
+function showToast(msg,dur=2500){
+  const t=el('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);
+}
+function renderAll(){renderHome();renderPipeline();renderClients();renderOutreachHistory();renderDeletedBin();updateRedDots();}
+
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-bg'))e.target.classList.remove('open');});
+
+/* ════════════════════════════════════════════════════════════════
+   STEP 14 — INIT
+════════════════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', async()=>{
+  // Theme
+  if(localStorage.getItem('theme')==='light'){document.body.classList.add('light');el('darkModeToggle')&&el('darkModeToggle').classList.remove('on');}
+  else{el('darkModeToggle')&&el('darkModeToggle').classList.add('on');}
+  // Groq indicator
+  if(GROQ_KEY)el('groqDot').className='api-dot on';
+  // Init tabs
+  initLeadsTab();
+  initSettingsTab();
+  // Load data
+  if(SUPA_URL&&SUPA_KEY){el('loadingMsg').textContent='Syncing with Supabase…';await loadFromSupabase();}
+  else{el('loadingMsg').textContent='Enter your API keys in Settings to get started';setSyncOn(false);await new Promise(r=>setTimeout(r,900));}
+  // Backup reminders
+  scheduleBackupReminders();
+  // Auto-refresh
+  setInterval(async()=>{if(SUPA_URL&&SUPA_KEY)await loadFromSupabase();renderAll();},60000);
+  // Render
+  renderAll();
+  // Reveal app, always start on Home
+  setTimeout(()=>{
+    el('loadingScreen').classList.add('hide');
+    el('appHeader').style.display='';el('appTabbar').style.display='';el('appMain').style.display='';
+    switchTab('home');
+  },600);
+});
+</script>
+</body>
+</html>
